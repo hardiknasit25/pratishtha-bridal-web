@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { IOrder, IOrderDetails, ProductDetails } from "../types";
-import { mockProducts } from "../data/mockData";
+import type { IOrder, IOrderDetails } from "../types";
+import { mockProducts, type ProductDetails } from "../data/mockData";
 import {
   Drawer,
   DrawerClose,
@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 
 // Order schema matching database
 const orderSchema = z.object({
@@ -70,6 +70,7 @@ export const OrderFormDrawer = ({
     { DesignNo: "", Quantity: 1, UnitPrice: 0, TotalPrice: 0 },
   ]);
   const [loading, setLoading] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   const {
     register,
@@ -227,15 +228,77 @@ export const OrderFormDrawer = ({
     }
   };
 
+  // Handle drawer open/close state
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      reset();
+      setIsKeyboardOpen(false); // Reset keyboard state when drawer closes
+      if (onClose) {
+        onClose();
+      }
+    }
+  };
+
+  // Handle input focus for keyboard handling
+  const handleInputFocus = (fieldName: string) => {
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      setIsKeyboardOpen(true);
+    }
+
+    // Add a delay to ensure the keyboard is open
+    setTimeout(() => {
+      const input = document.getElementById(fieldName);
+      if (input) {
+        if (isMobile) {
+          const scrollContainer = input.closest(".overflow-y-auto");
+          if (scrollContainer) {
+            // Special handling for the first field to ensure it's at the very top
+            if (fieldName === "CustomerName") {
+              scrollContainer.scrollTop = 0;
+            } else {
+              // For other fields, scroll them into view with a small offset
+              const inputRect = input.getBoundingClientRect();
+              const containerRect = scrollContainer.getBoundingClientRect();
+              const offset = inputRect.top - containerRect.top - 20; // 20px padding from top
+              scrollContainer.scrollTop += offset;
+            }
+          } else {
+            // Fallback to scrollIntoView if scroll container not found
+            input.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
+        } else {
+          // For desktop, just ensure it's visible
+          input.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        }
+      }
+    }, 300); // Reduced delay for faster response
+  };
+
+  const handleInputBlur = () => {
+    setIsKeyboardOpen(false); // Reset keyboard state when input loses focus
+  };
+
   return (
-    <Drawer open={isOpen} onOpenChange={setIsOpen}>
+    <Drawer open={isOpen} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
         <Button className="w-14 h-14 rounded-full shadow-lg bg-pink-500 hover:bg-pink-600">
           <Plus className="w-6 h-6" />
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
+      <DrawerContent
+        className={`overflow-hidden transition-all duration-300 ${
+          isKeyboardOpen ? "max-h-[60vh]" : "max-h-[85vh] sm:max-h-[80vh]"
+        }`}
+      >
+        <DrawerHeader className="flex-shrink-0">
           <DrawerTitle>
             {mode === "edit" ? "Edit Order" : "Add New Order"}
           </DrawerTitle>
@@ -246,7 +309,7 @@ export const OrderFormDrawer = ({
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="px-4 pb-4">
+        <div className="flex-1 overflow-y-auto px-4">
           <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
             {/* Customer Name */}
             <div className="space-y-2">
@@ -255,6 +318,8 @@ export const OrderFormDrawer = ({
                 id="CustomerName"
                 {...register("CustomerName")}
                 placeholder="Enter customer name"
+                onFocus={() => handleInputFocus("CustomerName")}
+                onBlur={handleInputBlur}
               />
               {errors.CustomerName && (
                 <p className="text-sm text-destructive">
@@ -519,7 +584,7 @@ export const OrderFormDrawer = ({
           </form>
         </div>
 
-        <DrawerFooter>
+        <DrawerFooter className="flex-shrink-0 border-t bg-white">
           <div className="flex space-x-2">
             <DrawerClose asChild>
               <Button
@@ -533,15 +598,18 @@ export const OrderFormDrawer = ({
             <Button
               onClick={handleSubmit(onSubmitForm)}
               disabled={loading}
-              className="flex-1 bg-pink-500 hover:bg-pink-600"
+              className="flex-1"
             >
-              {loading
-                ? mode === "edit"
-                  ? "Updating..."
-                  : "Adding..."
-                : mode === "edit"
-                ? "Update Order"
-                : "Add Order"}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {mode === "edit" ? "Updating..." : "Creating..."}
+                </>
+              ) : mode === "edit" ? (
+                "Update Order"
+              ) : (
+                "Create Order"
+              )}
             </Button>
           </div>
         </DrawerFooter>
