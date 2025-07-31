@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { ProductDetails } from "../types";
 import api from "../services/api";
+import { API_ENDPOINTS } from "../services/apiEndpoints";
 
 // Async thunks for API calls using axios
 export const fetchProducts = createAsyncThunk(
@@ -9,7 +10,7 @@ export const fetchProducts = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log("Redux: Starting fetchProducts API call...");
-      const response = await api.get("/products");
+      const response = await api.get(API_ENDPOINTS.GET_PRODUCTS);
       console.log("Redux: API call successful:", response.data);
       return response.data;
     } catch (error) {
@@ -44,7 +45,7 @@ export const createProduct = createAsyncThunk(
   "products/createProduct",
   async (product: ProductDetails, { rejectWithValue }) => {
     try {
-      const response = await api.post("/products", product);
+      const response = await api.post(API_ENDPOINTS.CREATE_PRODUCT, product);
       return response.data;
     } catch (error) {
       const errorMessage =
@@ -58,7 +59,10 @@ export const updateProduct = createAsyncThunk(
   "products/updateProduct",
   async (product: ProductDetails, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/products/${product.DesignNo}`, product);
+      const response = await api.put(
+        API_ENDPOINTS.UPDATE_PRODUCT.replace(":id", product.DesignNo),
+        product
+      );
       return response.data;
     } catch (error) {
       const errorMessage =
@@ -72,7 +76,7 @@ export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
   async (designNo: string, { rejectWithValue }) => {
     try {
-      await api.delete(`/products/${designNo}`);
+      await api.delete(API_ENDPOINTS.DELETE_PRODUCT.replace(":id", designNo));
       return designNo;
     } catch (error) {
       const errorMessage =

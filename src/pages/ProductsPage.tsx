@@ -4,15 +4,21 @@ import { ExpandableCard } from "../components/ExpandableCard";
 import { ProductFormDrawer } from "../components/ProductFormDrawer";
 import { SearchBar } from "../components/SearchBar";
 import type { ProductDetails } from "../types";
-import productData from "../../ProductData.json";
-import { useAppDispatch } from "../hooks/redux";
-import { fetchProducts } from "../store/productSlice";
+import { useAppDispatch, useAppSelector } from "../hooks/redux";
+import {
+  fetchProducts,
+  deleteProduct,
+  createProduct,
+  updateProduct,
+} from "../store/productSlice";
 
 export const ProductsPage = () => {
-  // Local state for products and UI
-  const [products, setProducts] = useState<ProductDetails[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Redux state
+  const { products, loading, error } = useAppSelector(
+    (state) => state.products
+  );
+
+  // Local state for UI
   const [selectedProduct, setSelectedProduct] = useState<ProductDetails | null>(
     null
   );
@@ -26,31 +32,6 @@ export const ProductsPage = () => {
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
-
-  // Load products from JSON data on component mount
-  useEffect(() => {
-    const loadProducts = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Load from JSON data
-        setProducts(productData as ProductDetails[]);
-      } catch (err) {
-        console.error("Error loading products:", err);
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load products";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProducts();
-  }, []);
 
   const filteredProducts = products.filter(
     (product) =>
@@ -70,21 +51,10 @@ export const ProductsPage = () => {
   const confirmDelete = async () => {
     if (deleteDialog.product) {
       try {
-        setLoading(true);
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 300));
-
-        setProducts((prev) =>
-          prev.filter((p) => p.DesignNo !== deleteDialog.product!.DesignNo)
-        );
+        await dispatch(deleteProduct(deleteDialog.product.DesignNo)).unwrap();
         setDeleteDialog({ isOpen: false, product: null });
       } catch (err) {
         console.error("Error deleting product:", err);
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to delete product";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
       }
     }
   };
@@ -93,39 +63,24 @@ export const ProductsPage = () => {
     data: Omit<ProductDetails, "DesignNo">
   ) => {
     try {
-      setLoading(true);
-      setError(null);
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       if (selectedProduct) {
         // Update existing product - preserve DesignNo
         const updatedProduct: ProductDetails = {
           ...data,
           DesignNo: selectedProduct.DesignNo,
         };
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.DesignNo === selectedProduct.DesignNo ? updatedProduct : p
-          )
-        );
+        await dispatch(updateProduct(updatedProduct)).unwrap();
       } else {
         // Add new product - generate temporary DesignNo for demo
         const newProduct: ProductDetails = {
           ...data,
           DesignNo: `DES${Date.now()}`, // Temporary ID, backend will generate proper one
         };
-        setProducts((prev) => [...prev, newProduct]);
+        await dispatch(createProduct(newProduct)).unwrap();
       }
       setSelectedProduct(null);
     } catch (err) {
       console.error("Error saving product:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to save product";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
