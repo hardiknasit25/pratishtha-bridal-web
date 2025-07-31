@@ -77,10 +77,10 @@ export const updateProduct = createAsyncThunk(
 
 export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
-  async (designNo: string, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
-      await api.delete(API_ENDPOINTS.DELETE_PRODUCT.replace(":id", designNo));
-      return designNo;
+      await api.delete(API_ENDPOINTS.DELETE_PRODUCT.replace(":id", id));
+      return id;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to delete product";
@@ -145,13 +145,20 @@ const productSlice = createSlice({
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.loading = false;
+        console.log("Redux: createProduct.fulfilled - payload:", action.payload);
         // Ensure the response data is properly structured
-        if (action.payload && typeof action.payload === 'object') {
-          state.products.push(action.payload as ProductDetails);
+        if (action.payload && typeof action.payload === "object") {
+          const newProduct = action.payload as ProductDetails;
+          console.log("Redux: Adding new product to state:", newProduct);
+          state.products.push(newProduct);
+          console.log("Redux: Products array after adding:", state.products);
+        } else {
+          console.error("Redux: Invalid payload received:", action.payload);
         }
       })
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false;
+        console.error("Redux: createProduct.rejected - error:", action.payload);
         state.error = action.payload as string;
       })
       // Update product
@@ -179,9 +186,7 @@ const productSlice = createSlice({
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = state.products.filter(
-          (p) => p._id !== action.payload
-        );
+        state.products = state.products.filter((p) => p._id !== action.payload);
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.loading = false;

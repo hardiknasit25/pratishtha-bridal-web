@@ -21,6 +21,11 @@ export const ProductsPage = () => {
     (state) => state.products
   );
 
+  // Add error boundary for component
+  if (error && !loading) {
+    console.error("ProductsPage error:", error);
+  }
+
   // Local state for UI
   const [selectedProduct, setSelectedProduct] = useState<ProductDetails | null>(
     null
@@ -36,11 +41,11 @@ export const ProductsPage = () => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  const filteredProducts = products.filter(
+  const filteredProducts = (products || []).filter(
     (product) =>
-      product.DesignNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.TypeOfGarment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.ColorOfGarment.toLowerCase().includes(searchTerm.toLowerCase())
+      product?.DesignNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product?.TypeOfGarment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product?.ColorOfGarment?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEdit = (product: ProductDetails) => {
@@ -165,43 +170,43 @@ export const ProductsPage = () => {
             </p>
           </div>
         ) : (
-          filteredProducts.map((product) => (
-            <ExpandableCard
-              key={product.DesignNo}
-              title={product.DesignNo}
-              subtitle={product.TypeOfGarment}
-              price={product.Rate.toFixed(2)}
-              onEdit={() => handleEdit(product)}
-              onDelete={() => handleDelete(product)}
-            >
-              <div className="space-y-2 text-sm">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Garment Color:
-                    </span>
-                    <p className="text-gray-600">{product.ColorOfGarment}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Blouse Color:
-                    </span>
-                    <p className="text-gray-600">{product.BlouseColor}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Dupatta Color:
-                    </span>
-                    <p className="text-gray-600">{product.DupptaColor}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium text-gray-700">Fix Code:</span>
-                    <p className="text-gray-600">{product.FixCode}</p>
-                  </div>
-                </div>
-              </div>
+                     filteredProducts.map((product) => (
+             <ExpandableCard
+               key={product?._id || product?.DesignNo || Math.random()}
+               title={product?.DesignNo || "Unknown"}
+               subtitle={product?.TypeOfGarment || "Unknown"}
+               price={(product?.Rate || 0).toFixed(2)}
+               onEdit={() => handleEdit(product)}
+               onDelete={() => handleDelete(product)}
+             >
+                             <div className="space-y-2 text-sm">
+                 <div className="grid grid-cols-2 gap-2">
+                   <div>
+                     <span className="font-medium text-gray-700">
+                       Garment Color:
+                     </span>
+                     <p className="text-gray-600">{product?.ColorOfGarment || "N/A"}</p>
+                   </div>
+                   <div>
+                     <span className="font-medium text-gray-700">
+                       Blouse Color:
+                     </span>
+                     <p className="text-gray-600">{product?.BlouseColor || "N/A"}</p>
+                   </div>
+                 </div>
+                 <div className="grid grid-cols-2 gap-2">
+                   <div>
+                     <span className="font-medium text-gray-700">
+                       Dupatta Color:
+                     </span>
+                     <p className="text-gray-600">{product?.DupptaColor || "N/A"}</p>
+                   </div>
+                   <div>
+                     <span className="font-medium text-gray-700">Fix Code:</span>
+                     <p className="text-gray-600">{product?.FixCode || "N/A"}</p>
+                   </div>
+                 </div>
+               </div>
             </ExpandableCard>
           ))
         )}
