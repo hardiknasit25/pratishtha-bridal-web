@@ -86,7 +86,7 @@ export const OrdersPage = () => {
   };
 
   const handleSubmitOrder = async (data: {
-    OrderNo: string;
+    Date: string;
     CustomerName: string;
     Address: string;
     PhoneNo: string;
@@ -104,7 +104,8 @@ export const OrdersPage = () => {
   }) => {
     const orderData: IOrder = {
       ...data,
-      Date: selectedOrder ? selectedOrder.Date : new Date(), // Keep original date for updates, use current date for new orders
+      OrderNo: selectedOrder ? selectedOrder.OrderNo : `ORD${Date.now()}`, // Preserve existing OrderNo or generate temporary one
+      Date: new Date(data.Date), // Convert string date to Date object
       Remark: data.Remark || "", // Ensure Remark is always a string
     };
     try {

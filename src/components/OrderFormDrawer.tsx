@@ -29,7 +29,6 @@ import { Plus } from "lucide-react";
 
 // Order schema matching database
 const orderSchema = z.object({
-  OrderNo: z.string().min(1, "Order number is required"),
   Date: z.string().min(1, "Date is required"),
   CustomerName: z.string().min(1, "Customer name is required"),
   Address: z.string().min(1, "Address is required"),
@@ -81,8 +80,7 @@ export const OrderFormDrawer = ({
   } = useForm<OrderFormData>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      OrderNo: "",
-      Date: new Date().toISOString().split('T')[0], // Today's date as default
+      Date: new Date().toISOString().split("T")[0], // Today's date as default
       CustomerName: "",
       Address: "",
       PhoneNo: "",
@@ -111,11 +109,11 @@ export const OrderFormDrawer = ({
   // Set form values when editing
   useEffect(() => {
     if (order && mode === "edit") {
-      setValue("OrderNo", order.OrderNo || "");
       // Convert Date object to string for date input
-      const orderDate = order.Date instanceof Date 
-        ? order.Date.toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0];
+      const orderDate =
+        order.Date instanceof Date
+          ? order.Date.toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0];
       setValue("Date", orderDate);
       setValue("CustomerName", order.CustomerName || "");
       setValue("Address", order.Address || "");
@@ -250,36 +248,6 @@ export const OrderFormDrawer = ({
 
         <div className="px-4 pb-4">
           <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
-            {/* Order Number */}
-            <div className="space-y-2">
-              <Label htmlFor="OrderNo">Order Number *</Label>
-              <Input
-                id="OrderNo"
-                {...register("OrderNo")}
-                placeholder="e.g., ORD001"
-              />
-              {errors.OrderNo && (
-                <p className="text-sm text-destructive">
-                  {errors.OrderNo.message}
-                </p>
-              )}
-            </div>
-
-            {/* Date */}
-            <div className="space-y-2">
-              <Label htmlFor="Date">Date *</Label>
-              <Input
-                id="Date"
-                type="date"
-                {...register("Date")}
-              />
-              {errors.Date && (
-                <p className="text-sm text-destructive">
-                  {errors.Date.message}
-                </p>
-              )}
-            </div>
-
             {/* Customer Name */}
             <div className="space-y-2">
               <Label htmlFor="CustomerName">Customer Name *</Label>
@@ -291,6 +259,17 @@ export const OrderFormDrawer = ({
               {errors.CustomerName && (
                 <p className="text-sm text-destructive">
                   {errors.CustomerName.message}
+                </p>
+              )}
+            </div>
+
+            {/* Date */}
+            <div className="space-y-2">
+              <Label htmlFor="Date">Date *</Label>
+              <Input id="Date" type="date" {...register("Date")} />
+              {errors.Date && (
+                <p className="text-sm text-destructive">
+                  {errors.Date.message}
                 </p>
               )}
             </div>
