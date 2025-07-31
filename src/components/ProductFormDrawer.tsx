@@ -45,6 +45,7 @@ export const ProductFormDrawer = ({
 }: ProductFormDrawerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   const {
     register,
@@ -115,18 +116,37 @@ export const ProductFormDrawer = ({
 
   // Handle input focus for keyboard handling
   const handleInputFocus = (fieldName: string) => {
-    // Add a small delay to ensure the keyboard is open
+    // Check if we're on mobile
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      setIsKeyboardOpen(true);
+    }
+    
+    // Add a delay to ensure the keyboard is open
     setTimeout(() => {
       const input = document.getElementById(fieldName);
       if (input) {
-        // Check if we're on mobile
-        const isMobile = window.innerWidth <= 768;
         if (isMobile) {
-          // For mobile, scroll to center with more padding
-          input.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
+          // For mobile, use a more aggressive scroll strategy
+          const scrollContainer = input.closest('.overflow-y-auto');
+          if (scrollContainer) {
+            // Scroll to the top of the form to ensure first field is visible
+            if (fieldName === 'TypeOfGarment') {
+              scrollContainer.scrollTop = 0;
+            } else {
+              // For other fields, scroll them into view
+              const inputRect = input.getBoundingClientRect();
+              const containerRect = scrollContainer.getBoundingClientRect();
+              const offset = inputRect.top - containerRect.top - 20; // 20px padding
+              scrollContainer.scrollTop += offset;
+            }
+          } else {
+            // Fallback to scrollIntoView
+            input.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          }
         } else {
           // For desktop, just ensure it's visible
           input.scrollIntoView({
@@ -135,11 +155,12 @@ export const ProductFormDrawer = ({
           });
         }
       }
-    }, 300);
+    }, 300); // Reduced delay for faster response
   };
 
   const handleInputBlur = () => {
-    // Optional: Add any blur handling logic here
+    // Reset keyboard state when input loses focus
+    setIsKeyboardOpen(false);
   };
 
   return (
@@ -149,7 +170,9 @@ export const ProductFormDrawer = ({
           <Plus className="w-6 h-6" />
         </Button>
       </DrawerTrigger>
-             <DrawerContent className="max-h-[90vh] overflow-hidden sm:max-h-[85vh]">
+             <DrawerContent className={`overflow-hidden transition-all duration-300 ${
+         isKeyboardOpen ? 'max-h-[60vh]' : 'max-h-[85vh] sm:max-h-[80vh]'
+       }`}>
         <DrawerHeader className="flex-shrink-0">
           <DrawerTitle>
             {mode === "edit" ? "Edit Product" : "Add New Product"}
@@ -274,20 +297,20 @@ export const ProductFormDrawer = ({
             {/* Fix Code */}
             <div className="space-y-2">
               <Label htmlFor="FixCode">Fix Code *</Label>
-                             <Input
-                 id="FixCode"
-                 type="number"
-                 min="0"
-                 {...register("FixCode", {
-                   valueAsNumber: true,
-                   required: "Fix code is required",
-                   min: { value: 0, message: "Fix code must be positive" },
-                 })}
-                 placeholder="e.g., 1001"
-                 className={errors.FixCode ? "border-red-500" : ""}
-                 onFocus={() => handleInputFocus("FixCode")}
-                 onBlur={handleInputBlur}
-               />
+              <Input
+                id="FixCode"
+                type="number"
+                min="0"
+                {...register("FixCode", {
+                  valueAsNumber: true,
+                  required: "Fix code is required",
+                  min: { value: 0, message: "Fix code must be positive" },
+                })}
+                placeholder="e.g., 1001"
+                className={errors.FixCode ? "border-red-500" : ""}
+                onFocus={() => handleInputFocus("FixCode")}
+                onBlur={handleInputBlur}
+              />
               {errors.FixCode && (
                 <p className="text-sm text-destructive">
                   {errors.FixCode.message}
