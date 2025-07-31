@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Plus, Edit } from "lucide-react";
+import { Plus } from "lucide-react";
 
 // Order schema matching database
 const orderSchema = z.object({

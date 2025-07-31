@@ -20,7 +20,7 @@ export const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-end items-center py-4">
           {/* User Menu */}
-          <div className="flex items-center space-x-4">
+          <div className="w-full flex items-center justify-between space-x-4">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <User size={16} />
               <span>Welcome, {username || "User"}</span>

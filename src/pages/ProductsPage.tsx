@@ -117,17 +117,9 @@ export const ProductsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       {/* Header */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Products</h1>
-          <p className="text-gray-600">Manage your product catalog</p>
-        </div>
-        <ProductFormDrawer
-          product={selectedProduct || undefined}
-          mode={selectedProduct ? "edit" : "create"}
-          onSubmit={handleSubmitProduct}
-          onClose={handleDrawerClose}
-        />
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Products</h1>
+        <p className="text-gray-600">Manage your product catalog</p>
       </div>
 
       {error && (
@@ -210,6 +202,16 @@ export const ProductsPage = () => {
             </ExpandableCard>
           ))
         )}
+      </div>
+
+      {/* Floating Action Button */}
+      <div className="fixed bottom-24 right-6 z-40">
+        <ProductFormDrawer
+          product={selectedProduct || undefined}
+          mode={selectedProduct ? "edit" : "create"}
+          onSubmit={handleSubmitProduct}
+          onClose={handleDrawerClose}
+        />
       </div>
 
       {/* Delete Confirmation Dialog */}

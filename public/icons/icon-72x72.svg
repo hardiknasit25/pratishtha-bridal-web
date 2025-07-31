@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="subtlePattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="10" height="10" fill="#ffffff" opacity="0.1"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="72" height="72" fill="url(#mainGradient)"/>
+  <rect width="72" height="72" fill="url(#subtlePattern)"/>
+  
+  <!-- Main "V" symbol -->
+  <path d="M 18 21.599999999999998 L 36 54 L 54 21.599999999999998" 
+        stroke="#ffffff" 
+        stroke-width="5.76" 
+        stroke-linecap="round" 
+        fill="none"/>
+  
+  <!-- Decorative dot -->
+  <circle cx="36" cy="61.199999999999996" r="5.76" fill="#f472b6"/>
+</svg>

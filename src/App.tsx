@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
 import { BottomNavigation } from "./components/BottomNavigation";
+import { InstallPWA } from "./components/InstallPWA";
 import { OrdersPage } from "./pages/OrdersPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -31,6 +32,7 @@ function App() {
                 <Navigation />
                 <ProductsPage />
                 <BottomNavigation />
+                <InstallPWA />
               </div>
             </ProtectedRoute>
           }
@@ -43,6 +45,7 @@ function App() {
                 <Navigation />
                 <OrdersPage />
                 <BottomNavigation />
+                <InstallPWA />
               </div>
             </ProtectedRoute>
           }

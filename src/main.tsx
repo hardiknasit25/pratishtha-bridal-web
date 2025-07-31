@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { store } from "./store";
 import "./index.css";
 import App from "./App.tsx";
+import { registerServiceWorker } from "./utils/pwa.ts";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -12,3 +13,6 @@ createRoot(document.getElementById("root")!).render(
     </Provider>
   </StrictMode>
 );
+
+// Register service worker for PWA functionality
+registerServiceWorker();

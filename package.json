@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "update-app-name": "node scripts/update-app-name.js",
+    "generate-icons": "node scripts/generate-icons.js",
+    "deploy": "npm run build && vercel --prod"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -29,6 +32,7 @@
     "react-hook-form": "^7.61.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.7.1",
+    "sharp": "^0.34.3",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^3.4.17",
     "vaul": "^1.1.2",

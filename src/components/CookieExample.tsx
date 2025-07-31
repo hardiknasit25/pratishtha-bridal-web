@@ -139,7 +139,7 @@ export const CookieExample = () => {
       <div className="p-4 bg-blue-50 rounded">
         <h3 className="text-lg font-semibold mb-2">Usage Examples</h3>
         <div className="text-sm space-y-2">
-          <p><strong>Set cookie:</strong> <code>cookieService.set("key", "value", { expires: 7 })</code></p>
+          <p><strong>Set cookie:</strong> <code>cookieService.set("key", "value", {'{'} expires: 7 {'}'})</code></p>
           <p><strong>Get cookie:</strong> <code>cookieService.get("key")</code></p>
           <p><strong>Delete cookie:</strong> <code>cookieService.delete("key")</code></p>
           <p><strong>Set auth token:</strong> <code>cookieService.setAuthToken("token", true)</code></p>
