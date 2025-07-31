@@ -113,6 +113,35 @@ export const ProductFormDrawer = ({
     }
   };
 
+  // Handle input focus for keyboard handling
+  const handleInputFocus = (fieldName: string) => {
+    // Add a small delay to ensure the keyboard is open
+    setTimeout(() => {
+      const input = document.getElementById(fieldName);
+      if (input) {
+        // Check if we're on mobile
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+          // For mobile, scroll to center with more padding
+          input.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        } else {
+          // For desktop, just ensure it's visible
+          input.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        }
+      }
+    }, 300);
+  };
+
+  const handleInputBlur = () => {
+    // Optional: Add any blur handling logic here
+  };
+
   return (
     <Drawer open={isOpen} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
@@ -120,8 +149,8 @@ export const ProductFormDrawer = ({
           <Plus className="w-6 h-6" />
         </Button>
       </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
+             <DrawerContent className="max-h-[90vh] overflow-hidden sm:max-h-[85vh]">
+        <DrawerHeader className="flex-shrink-0">
           <DrawerTitle>
             {mode === "edit" ? "Edit Product" : "Add New Product"}
           </DrawerTitle>
@@ -132,128 +161,143 @@ export const ProductFormDrawer = ({
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="px-4 pb-4">
-          <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
-                         {/* Type of Garment */}
-             <div className="space-y-2">
-               <Label htmlFor="TypeOfGarment">Type of Garment *</Label>
-               <Input
-                 id="TypeOfGarment"
-                 {...register("TypeOfGarment", {
-                   required: "Type of garment is required"
-                 })}
-                 placeholder="e.g., Bridal Lehenga"
-                 className={errors.TypeOfGarment ? "border-red-500" : ""}
-               />
-               {errors.TypeOfGarment && (
-                 <p className="text-sm text-destructive">
-                   {errors.TypeOfGarment.message}
-                 </p>
-               )}
-             </div>
+        <div className="flex-1 overflow-y-auto px-4">
+          <form
+            onSubmit={handleSubmit(onSubmitForm)}
+            className="space-y-4 pb-4"
+          >
+            {/* Type of Garment */}
+            <div className="space-y-2">
+              <Label htmlFor="TypeOfGarment">Type of Garment *</Label>
+              <Input
+                id="TypeOfGarment"
+                {...register("TypeOfGarment", {
+                  required: "Type of garment is required",
+                })}
+                placeholder="e.g., Bridal Lehenga"
+                className={errors.TypeOfGarment ? "border-red-500" : ""}
+                onFocus={() => handleInputFocus("TypeOfGarment")}
+                onBlur={handleInputBlur}
+              />
+              {errors.TypeOfGarment && (
+                <p className="text-sm text-destructive">
+                  {errors.TypeOfGarment.message}
+                </p>
+              )}
+            </div>
 
-             {/* Color of Garment */}
-             <div className="space-y-2">
-               <Label htmlFor="ColorOfGarment">Color of Garment *</Label>
-               <Input
-                 id="ColorOfGarment"
-                 {...register("ColorOfGarment", {
-                   required: "Color of garment is required"
-                 })}
-                 placeholder="e.g., Red"
-                 className={errors.ColorOfGarment ? "border-red-500" : ""}
-               />
-               {errors.ColorOfGarment && (
-                 <p className="text-sm text-destructive">
-                   {errors.ColorOfGarment.message}
-                 </p>
-               )}
-             </div>
+            {/* Color of Garment */}
+            <div className="space-y-2">
+              <Label htmlFor="ColorOfGarment">Color of Garment *</Label>
+              <Input
+                id="ColorOfGarment"
+                {...register("ColorOfGarment", {
+                  required: "Color of garment is required",
+                })}
+                placeholder="e.g., Red"
+                className={errors.ColorOfGarment ? "border-red-500" : ""}
+                onFocus={() => handleInputFocus("ColorOfGarment")}
+                onBlur={handleInputBlur}
+              />
+              {errors.ColorOfGarment && (
+                <p className="text-sm text-destructive">
+                  {errors.ColorOfGarment.message}
+                </p>
+              )}
+            </div>
 
-             {/* Blouse Color */}
-             <div className="space-y-2">
-               <Label htmlFor="BlouseColor">Blouse Color *</Label>
-               <Input
-                 id="BlouseColor"
-                 {...register("BlouseColor", {
-                   required: "Blouse color is required"
-                 })}
-                 placeholder="e.g., Gold"
-                 className={errors.BlouseColor ? "border-red-500" : ""}
-               />
-               {errors.BlouseColor && (
-                 <p className="text-sm text-destructive">
-                   {errors.BlouseColor.message}
-                 </p>
-               )}
-             </div>
+            {/* Blouse Color */}
+            <div className="space-y-2">
+              <Label htmlFor="BlouseColor">Blouse Color *</Label>
+              <Input
+                id="BlouseColor"
+                {...register("BlouseColor", {
+                  required: "Blouse color is required",
+                })}
+                placeholder="e.g., Gold"
+                className={errors.BlouseColor ? "border-red-500" : ""}
+                onFocus={() => handleInputFocus("BlouseColor")}
+                onBlur={handleInputBlur}
+              />
+              {errors.BlouseColor && (
+                <p className="text-sm text-destructive">
+                  {errors.BlouseColor.message}
+                </p>
+              )}
+            </div>
 
-             {/* Dupatta Color */}
-             <div className="space-y-2">
-               <Label htmlFor="DupptaColor">Dupatta Color *</Label>
-               <Input
-                 id="DupptaColor"
-                 {...register("DupptaColor", {
-                   required: "Dupatta color is required"
-                 })}
-                 placeholder="e.g., Red"
-                 className={errors.DupptaColor ? "border-red-500" : ""}
-               />
-               {errors.DupptaColor && (
-                 <p className="text-sm text-destructive">
-                   {errors.DupptaColor.message}
-                 </p>
-               )}
-             </div>
+            {/* Dupatta Color */}
+            <div className="space-y-2">
+              <Label htmlFor="DupptaColor">Dupatta Color *</Label>
+              <Input
+                id="DupptaColor"
+                {...register("DupptaColor", {
+                  required: "Dupatta color is required",
+                })}
+                placeholder="e.g., Red"
+                className={errors.DupptaColor ? "border-red-500" : ""}
+                onFocus={() => handleInputFocus("DupptaColor")}
+                onBlur={handleInputBlur}
+              />
+              {errors.DupptaColor && (
+                <p className="text-sm text-destructive">
+                  {errors.DupptaColor.message}
+                </p>
+              )}
+            </div>
 
-                         {/* Rate */}
-             <div className="space-y-2">
-               <Label htmlFor="Rate">Rate (₹) *</Label>
-               <Input
-                 id="Rate"
-                 type="number"
-                 step="0.01"
-                 min="0"
-                 {...register("Rate", { 
-                   valueAsNumber: true,
-                   required: "Rate is required",
-                   min: { value: 0, message: "Rate must be positive" }
-                 })}
-                 placeholder="0.00"
-                 className={errors.Rate ? "border-red-500" : ""}
-               />
-               {errors.Rate && (
-                 <p className="text-sm text-destructive">
-                   {errors.Rate.message}
-                 </p>
-               )}
-             </div>
+            {/* Rate */}
+            <div className="space-y-2">
+              <Label htmlFor="Rate">Rate (₹) *</Label>
+              <Input
+                id="Rate"
+                type="number"
+                step="0.01"
+                min="0"
+                {...register("Rate", {
+                  valueAsNumber: true,
+                  required: "Rate is required",
+                  min: { value: 0, message: "Rate must be positive" },
+                })}
+                placeholder="0.00"
+                className={errors.Rate ? "border-red-500" : ""}
+                onFocus={() => handleInputFocus("Rate")}
+                onBlur={handleInputBlur}
+              />
+              {errors.Rate && (
+                <p className="text-sm text-destructive">
+                  {errors.Rate.message}
+                </p>
+              )}
+            </div>
 
-             {/* Fix Code */}
-             <div className="space-y-2">
-               <Label htmlFor="FixCode">Fix Code *</Label>
-               <Input
+            {/* Fix Code */}
+            <div className="space-y-2">
+              <Label htmlFor="FixCode">Fix Code *</Label>
+                             <Input
                  id="FixCode"
                  type="number"
                  min="0"
-                 {...register("FixCode", { 
+                 {...register("FixCode", {
                    valueAsNumber: true,
                    required: "Fix code is required",
-                   min: { value: 0, message: "Fix code must be positive" }
+                   min: { value: 0, message: "Fix code must be positive" },
                  })}
                  placeholder="e.g., 1001"
                  className={errors.FixCode ? "border-red-500" : ""}
+                 onFocus={() => handleInputFocus("FixCode")}
+                 onBlur={handleInputBlur}
                />
-               {errors.FixCode && (
-                 <p className="text-sm text-destructive">
-                   {errors.FixCode.message}
-                 </p>
-               )}
-             </div>
+              {errors.FixCode && (
+                <p className="text-sm text-destructive">
+                  {errors.FixCode.message}
+                </p>
+              )}
+            </div>
           </form>
         </div>
 
-        <DrawerFooter>
+        <DrawerFooter className="flex-shrink-0 border-t bg-white">
           <div className="flex space-x-2">
             <DrawerClose asChild>
               <Button
