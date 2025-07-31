@@ -5,6 +5,8 @@ import { ProductFormDrawer } from "../components/ProductFormDrawer";
 import { SearchBar } from "../components/SearchBar";
 import type { ProductDetails } from "../types";
 import productData from "../../ProductData.json";
+import { useAppDispatch } from "../hooks/redux";
+import { fetchProducts } from "../store/productSlice";
 
 export const ProductsPage = () => {
   // Local state for products and UI
@@ -19,6 +21,11 @@ export const ProductsPage = () => {
     isOpen: boolean;
     product: ProductDetails | null;
   }>({ isOpen: false, product: null });
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   // Load products from JSON data on component mount
   useEffect(() => {
@@ -82,7 +89,9 @@ export const ProductsPage = () => {
     }
   };
 
-  const handleSubmitProduct = async (data: ProductDetails) => {
+  const handleSubmitProduct = async (
+    data: Omit<ProductDetails, "DesignNo">
+  ) => {
     try {
       setLoading(true);
       setError(null);
@@ -91,13 +100,23 @@ export const ProductsPage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (selectedProduct) {
-        // Update existing product
+        // Update existing product - preserve DesignNo
+        const updatedProduct: ProductDetails = {
+          ...data,
+          DesignNo: selectedProduct.DesignNo,
+        };
         setProducts((prev) =>
-          prev.map((p) => (p.DesignNo === selectedProduct.DesignNo ? data : p))
+          prev.map((p) =>
+            p.DesignNo === selectedProduct.DesignNo ? updatedProduct : p
+          )
         );
       } else {
-        // Add new product
-        setProducts((prev) => [...prev, data]);
+        // Add new product - generate temporary DesignNo for demo
+        const newProduct: ProductDetails = {
+          ...data,
+          DesignNo: `DES${Date.now()}`, // Temporary ID, backend will generate proper one
+        };
+        setProducts((prev) => [...prev, newProduct]);
       }
       setSelectedProduct(null);
     } catch (err) {

@@ -122,7 +122,6 @@ export const ProductFormDrawer = ({
 
         <div className="px-4 pb-4">
           <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
-
             {/* Type of Garment */}
             <div className="space-y-2">
               <Label htmlFor="TypeOfGarment">Type of Garment *</Label>
