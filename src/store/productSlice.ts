@@ -145,7 +145,10 @@ const productSlice = createSlice({
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.loading = false;
-        console.log("Redux: createProduct.fulfilled - payload:", action.payload);
+        console.log(
+          "Redux: createProduct.fulfilled - payload:",
+          action.payload
+        );
         // Ensure the response data is properly structured
         if (action.payload && typeof action.payload === "object") {
           const newProduct = action.payload as ProductDetails;

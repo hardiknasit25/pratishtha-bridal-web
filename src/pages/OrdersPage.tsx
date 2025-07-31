@@ -5,6 +5,7 @@ import { OrderFormDrawer } from "../components/OrderFormDrawer";
 import { SearchBar } from "../components/SearchBar";
 import type { IOrder } from "../types";
 import orderData from "../../OrderData.json";
+import { showToast } from "../components/Toast";
 
 export const OrdersPage = () => {
   // Local state for orders and UI
@@ -74,11 +75,17 @@ export const OrdersPage = () => {
           prev.filter((o) => o.OrderNo !== deleteDialog.order!.OrderNo)
         );
         setDeleteDialog({ isOpen: false, order: null });
+        // Show success message
+        showToast.success(
+          "Order Deleted",
+          `${deleteDialog.order.OrderNo} has been successfully removed.`
+        );
       } catch (err) {
         console.error("Error deleting order:", err);
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to delete order";
-        setError(errorMessage);
+        showToast.error(
+          "Delete Failed",
+          "Unable to delete the order. Please try again."
+        );
       } finally {
         setLoading(false);
       }
@@ -104,6 +111,7 @@ export const OrdersPage = () => {
   }) => {
     const orderData: IOrder = {
       ...data,
+      _id: selectedOrder ? selectedOrder._id : `order_${Date.now()}`, // Preserve existing _id or generate temporary one
       OrderNo: selectedOrder ? selectedOrder.OrderNo : `ORD${Date.now()}`, // Preserve existing OrderNo or generate temporary one
       Date: new Date(data.Date), // Convert string date to Date object
       Remark: data.Remark || "", // Ensure Remark is always a string
@@ -120,16 +128,27 @@ export const OrdersPage = () => {
         setOrders((prev) =>
           prev.map((o) => (o.OrderNo === selectedOrder.OrderNo ? orderData : o))
         );
+        // Show success message
+        showToast.success(
+          "Order Updated",
+          `${selectedOrder.OrderNo} has been successfully updated.`
+        );
       } else {
         // Add new order
         setOrders((prev) => [...prev, orderData]);
+        // Show success message
+        showToast.success(
+          "Order Created",
+          `New order for ${data.CustomerName} has been successfully created.`
+        );
       }
       setSelectedOrder(null);
     } catch (err) {
       console.error("Error saving order:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to save order";
-      setError(errorMessage);
+      showToast.error(
+        "Operation Failed",
+        "Unable to save the order. Please try again."
+      );
     } finally {
       setLoading(false);
     }

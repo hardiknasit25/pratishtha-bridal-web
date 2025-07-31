@@ -14,6 +14,7 @@ import {
   createProduct,
   updateProduct,
 } from "../store/productSlice";
+import { showToast } from "../components/Toast";
 
 export const ProductsPage = () => {
   // Redux state
@@ -44,7 +45,9 @@ export const ProductsPage = () => {
   const filteredProducts = (products || []).filter(
     (product) =>
       product?.DesignNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product?.TypeOfGarment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product?.TypeOfGarment?.toLowerCase().includes(
+        searchTerm.toLowerCase()
+      ) ||
       product?.ColorOfGarment?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -62,10 +65,16 @@ export const ProductsPage = () => {
         await dispatch(deleteProduct(deleteDialog.product._id)).unwrap();
         setDeleteDialog({ isOpen: false, product: null });
         // Show success message
-        alert("Product deleted successfully!");
+        showToast.success(
+          "Product Deleted",
+          `${deleteDialog.product.DesignNo} has been successfully removed from your catalog.`
+        );
       } catch (err) {
         console.error("Error deleting product:", err);
-        alert("Error deleting product. Please try again.");
+        showToast.error(
+          "Delete Failed",
+          "Unable to delete the product. Please try again."
+        );
       }
     }
   };
@@ -83,7 +92,10 @@ export const ProductsPage = () => {
         };
         await dispatch(updateProduct(updatedProduct)).unwrap();
         // Show success message
-        alert("Product updated successfully!");
+        showToast.success(
+          "Product Updated",
+          `${selectedProduct.DesignNo} has been successfully updated.`
+        );
       } else {
         // Add new product - generate temporary DesignNo and id for demo
         const newProduct: AddProduct = {
@@ -93,13 +105,19 @@ export const ProductsPage = () => {
         const result = await dispatch(createProduct(newProduct)).unwrap();
         console.log("Product creation result:", result);
         // Show success message
-        alert("Product created successfully!");
+        showToast.success(
+          "Product Created",
+          `${data.TypeOfGarment} has been successfully added to your catalog.`
+        );
       }
       // Clear selected product after successful submission
       setSelectedProduct(null);
     } catch (err) {
       console.error("Error saving product:", err);
-      alert("Error saving product. Please try again.");
+      showToast.error(
+        "Operation Failed",
+        "Unable to save the product. Please try again."
+      );
     }
   };
 
@@ -170,43 +188,49 @@ export const ProductsPage = () => {
             </p>
           </div>
         ) : (
-                     filteredProducts.map((product) => (
-             <ExpandableCard
-               key={product?._id || product?.DesignNo || Math.random()}
-               title={product?.DesignNo || "Unknown"}
-               subtitle={product?.TypeOfGarment || "Unknown"}
-               price={(product?.Rate || 0).toFixed(2)}
-               onEdit={() => handleEdit(product)}
-               onDelete={() => handleDelete(product)}
-             >
-                             <div className="space-y-2 text-sm">
-                 <div className="grid grid-cols-2 gap-2">
-                   <div>
-                     <span className="font-medium text-gray-700">
-                       Garment Color:
-                     </span>
-                     <p className="text-gray-600">{product?.ColorOfGarment || "N/A"}</p>
-                   </div>
-                   <div>
-                     <span className="font-medium text-gray-700">
-                       Blouse Color:
-                     </span>
-                     <p className="text-gray-600">{product?.BlouseColor || "N/A"}</p>
-                   </div>
-                 </div>
-                 <div className="grid grid-cols-2 gap-2">
-                   <div>
-                     <span className="font-medium text-gray-700">
-                       Dupatta Color:
-                     </span>
-                     <p className="text-gray-600">{product?.DupptaColor || "N/A"}</p>
-                   </div>
-                   <div>
-                     <span className="font-medium text-gray-700">Fix Code:</span>
-                     <p className="text-gray-600">{product?.FixCode || "N/A"}</p>
-                   </div>
-                 </div>
-               </div>
+          filteredProducts.map((product) => (
+            <ExpandableCard
+              key={product?._id || product?.DesignNo || Math.random()}
+              title={product?.DesignNo || "Unknown"}
+              subtitle={product?.TypeOfGarment || "Unknown"}
+              price={(product?.Rate || 0).toFixed(2)}
+              onEdit={() => handleEdit(product)}
+              onDelete={() => handleDelete(product)}
+            >
+              <div className="space-y-2 text-sm">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Garment Color:
+                    </span>
+                    <p className="text-gray-600">
+                      {product?.ColorOfGarment || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Blouse Color:
+                    </span>
+                    <p className="text-gray-600">
+                      {product?.BlouseColor || "N/A"}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Dupatta Color:
+                    </span>
+                    <p className="text-gray-600">
+                      {product?.DupptaColor || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Fix Code:</span>
+                    <p className="text-gray-600">{product?.FixCode || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
             </ExpandableCard>
           ))
         )}

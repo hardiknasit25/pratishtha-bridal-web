@@ -5,7 +5,17 @@ export interface User {
 
 // ProductDetails schema matching database
 export interface ProductDetails {
+  _id: string;
   DesignNo: string;
+  TypeOfGarment: string;
+  ColorOfGarment: string;
+  BlouseColor: string;
+  DupptaColor: string;
+  Rate: number;
+  FixCode: number;
+}
+
+export interface AddProduct {
   TypeOfGarment: string;
   ColorOfGarment: string;
   BlouseColor: string;
@@ -23,6 +33,7 @@ export interface IOrderDetails {
 }
 
 export interface IOrder {
+  _id: string;
   OrderNo: string;
   Date: Date;
   CustomerName: string;

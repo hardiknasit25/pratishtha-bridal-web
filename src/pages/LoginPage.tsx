@@ -4,6 +4,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { showToast } from "../components/Toast";
 // import { authService } from "../services/authService";
 
 export const LoginPage = () => {
@@ -26,7 +27,7 @@ export const LoginPage = () => {
     e.preventDefault();
 
     if (!formData.username.trim() || !formData.password.trim()) {
-      setError("Please fill in all fields");
+      showToast.error("Validation Error", "Please fill in all fields");
       return;
     }
 
@@ -44,13 +45,20 @@ export const LoginPage = () => {
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("username", formData.username);
 
+        // Show success message
+        showToast.success(
+          "Login Successful",
+          `Welcome back, ${formData.username}!`
+        );
+
         // Redirect to products page
         navigate("/products");
       } else {
         throw new Error("Invalid credentials");
       }
     } catch (err) {
-      setError(
+      showToast.error(
+        "Login Failed",
         err instanceof Error ? err.message : "Login failed. Please try again."
       );
     } finally {

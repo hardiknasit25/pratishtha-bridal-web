@@ -121,17 +121,17 @@ export const ProductFormDrawer = ({
     if (isMobile) {
       setIsKeyboardOpen(true);
     }
-    
+
     // Add a delay to ensure the keyboard is open
     setTimeout(() => {
       const input = document.getElementById(fieldName);
       if (input) {
         if (isMobile) {
           // For mobile, use a more aggressive scroll strategy
-          const scrollContainer = input.closest('.overflow-y-auto');
+          const scrollContainer = input.closest(".overflow-y-auto");
           if (scrollContainer) {
             // Scroll to the top of the form to ensure first field is visible
-            if (fieldName === 'TypeOfGarment') {
+            if (fieldName === "TypeOfGarment") {
               scrollContainer.scrollTop = 0;
             } else {
               // For other fields, scroll them into view
@@ -170,9 +170,11 @@ export const ProductFormDrawer = ({
           <Plus className="w-6 h-6" />
         </Button>
       </DrawerTrigger>
-             <DrawerContent className={`overflow-hidden transition-all duration-300 ${
-         isKeyboardOpen ? 'max-h-[60vh]' : 'max-h-[85vh] sm:max-h-[80vh]'
-       }`}>
+      <DrawerContent
+        className={`overflow-hidden transition-all duration-300 ${
+          isKeyboardOpen ? "max-h-[60vh]" : "max-h-[85vh] sm:max-h-[80vh]"
+        }`}
+      >
         <DrawerHeader className="flex-shrink-0">
           <DrawerTitle>
             {mode === "edit" ? "Edit Product" : "Add New Product"}

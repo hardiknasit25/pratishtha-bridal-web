@@ -13,10 +13,12 @@ import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ToastContainer } from "./components/Toast";
 
 function App() {
   return (
     <Router>
+      <ToastContainer />
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />

@@ -1,8 +1,8 @@
 import axios from "axios";
 import { cookieService } from "./cookieService";
 
-// const API_BASE_URL = "https://pratishtha-bridal-backend.vercel.app/api";
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "https://pratishtha-bridal-backend.vercel.app/api";
+// const API_BASE_URL = "http://localhost:3000/api";
 
 // Create axios instance with base configuration
 const api = axios.create({
