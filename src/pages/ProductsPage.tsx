@@ -88,6 +88,7 @@ export const ProductsPage = () => {
         // Show success message
         alert("Product created successfully!");
       }
+      // Clear selected product after successful submission
       setSelectedProduct(null);
     } catch (err) {
       console.error("Error saving product:", err);
