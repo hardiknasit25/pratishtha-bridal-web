@@ -54,7 +54,7 @@ export const ProductsPage = () => {
   const confirmDelete = async () => {
     if (deleteDialog.product) {
       try {
-        await dispatch(deleteProduct(deleteDialog.product.DesignNo)).unwrap();
+        await dispatch(deleteProduct(deleteDialog.product.id)).unwrap();
         setDeleteDialog({ isOpen: false, product: null });
         // Show success message
         alert("Product deleted successfully!");
@@ -66,22 +66,24 @@ export const ProductsPage = () => {
   };
 
   const handleSubmitProduct = async (
-    data: Omit<ProductDetails, "DesignNo">
+    data: Omit<ProductDetails, "DesignNo" | "id">
   ) => {
     try {
       if (selectedProduct) {
-        // Update existing product - preserve DesignNo
+        // Update existing product - preserve DesignNo and id
         const updatedProduct: ProductDetails = {
           ...data,
+          id: selectedProduct.id,
           DesignNo: selectedProduct.DesignNo,
         };
         await dispatch(updateProduct(updatedProduct)).unwrap();
         // Show success message
         alert("Product updated successfully!");
       } else {
-        // Add new product - generate temporary DesignNo for demo
+        // Add new product - generate temporary DesignNo and id for demo
         const newProduct: ProductDetails = {
           ...data,
+          id: `prod_${Date.now()}`, // Temporary ID, backend will generate proper one
           DesignNo: `DES${Date.now()}`, // Temporary ID, backend will generate proper one
         };
         await dispatch(createProduct(newProduct)).unwrap();
