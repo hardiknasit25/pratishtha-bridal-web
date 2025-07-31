@@ -20,7 +20,6 @@ import { Plus } from "lucide-react";
 
 // Product schema matching database
 const productSchema = z.object({
-  DesignNo: z.string().min(1, "Design number is required"),
   TypeOfGarment: z.string().min(1, "Type of garment is required"),
   ColorOfGarment: z.string().min(1, "Color of garment is required"),
   BlouseColor: z.string().min(1, "Blouse color is required"),
@@ -56,7 +55,6 @@ export const ProductFormDrawer = ({
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      DesignNo: "",
       TypeOfGarment: "",
       ColorOfGarment: "",
       BlouseColor: "",
@@ -69,7 +67,6 @@ export const ProductFormDrawer = ({
   // Set form values when editing
   useEffect(() => {
     if (product && mode === "edit") {
-      setValue("DesignNo", product.DesignNo || "");
       setValue("TypeOfGarment", product.TypeOfGarment || "");
       setValue("ColorOfGarment", product.ColorOfGarment || "");
       setValue("BlouseColor", product.BlouseColor || "");
@@ -125,20 +122,6 @@ export const ProductFormDrawer = ({
 
         <div className="px-4 pb-4">
           <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
-            {/* Design Number */}
-            <div className="space-y-2">
-              <Label htmlFor="DesignNo">Design Number *</Label>
-              <Input
-                id="DesignNo"
-                {...register("DesignNo")}
-                placeholder="e.g., DES001"
-              />
-              {errors.DesignNo && (
-                <p className="text-sm text-destructive">
-                  {errors.DesignNo.message}
-                </p>
-              )}
-            </div>
 
             {/* Type of Garment */}
             <div className="space-y-2">

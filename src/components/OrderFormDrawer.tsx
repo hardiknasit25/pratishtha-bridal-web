@@ -30,6 +30,7 @@ import { Plus } from "lucide-react";
 // Order schema matching database
 const orderSchema = z.object({
   OrderNo: z.string().min(1, "Order number is required"),
+  Date: z.string().min(1, "Date is required"),
   CustomerName: z.string().min(1, "Customer name is required"),
   Address: z.string().min(1, "Address is required"),
   PhoneNo: z.string().min(10, "Valid phone number is required"),
@@ -81,6 +82,7 @@ export const OrderFormDrawer = ({
     resolver: zodResolver(orderSchema),
     defaultValues: {
       OrderNo: "",
+      Date: new Date().toISOString().split('T')[0], // Today's date as default
       CustomerName: "",
       Address: "",
       PhoneNo: "",
@@ -110,6 +112,11 @@ export const OrderFormDrawer = ({
   useEffect(() => {
     if (order && mode === "edit") {
       setValue("OrderNo", order.OrderNo || "");
+      // Convert Date object to string for date input
+      const orderDate = order.Date instanceof Date 
+        ? order.Date.toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0];
+      setValue("Date", orderDate);
       setValue("CustomerName", order.CustomerName || "");
       setValue("Address", order.Address || "");
       setValue("PhoneNo", order.PhoneNo || "");
@@ -254,6 +261,21 @@ export const OrderFormDrawer = ({
               {errors.OrderNo && (
                 <p className="text-sm text-destructive">
                   {errors.OrderNo.message}
+                </p>
+              )}
+            </div>
+
+            {/* Date */}
+            <div className="space-y-2">
+              <Label htmlFor="Date">Date *</Label>
+              <Input
+                id="Date"
+                type="date"
+                {...register("Date")}
+              />
+              {errors.Date && (
+                <p className="text-sm text-destructive">
+                  {errors.Date.message}
                 </p>
               )}
             </div>
