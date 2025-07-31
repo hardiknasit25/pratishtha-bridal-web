@@ -6,7 +6,7 @@ import { SearchBar } from "../components/SearchBar";
 import { SkeletonLoader } from "../components/SkeletonLoader";
 import { Button } from "../components/ui/button";
 import { Loader2 } from "lucide-react";
-import type { ProductDetails } from "../types";
+import type { AddProduct, ProductDetails } from "../types";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 import {
   fetchProducts,
@@ -54,7 +54,7 @@ export const ProductsPage = () => {
   const confirmDelete = async () => {
     if (deleteDialog.product) {
       try {
-        await dispatch(deleteProduct(deleteDialog.product.id)).unwrap();
+        await dispatch(deleteProduct(deleteDialog.product._id)).unwrap();
         setDeleteDialog({ isOpen: false, product: null });
         // Show success message
         alert("Product deleted successfully!");
@@ -66,14 +66,14 @@ export const ProductsPage = () => {
   };
 
   const handleSubmitProduct = async (
-    data: Omit<ProductDetails, "DesignNo" | "id">
+    data: Omit<ProductDetails, "DesignNo" | "_id">
   ) => {
     try {
       if (selectedProduct) {
         // Update existing product - preserve DesignNo and id
         const updatedProduct: ProductDetails = {
           ...data,
-          id: selectedProduct.id,
+          _id: selectedProduct._id,
           DesignNo: selectedProduct.DesignNo,
         };
         await dispatch(updateProduct(updatedProduct)).unwrap();
@@ -81,12 +81,12 @@ export const ProductsPage = () => {
         alert("Product updated successfully!");
       } else {
         // Add new product - generate temporary DesignNo and id for demo
-        const newProduct: ProductDetails = {
+        const newProduct: AddProduct = {
           ...data,
-          id: `prod_${Date.now()}`, // Temporary ID, backend will generate proper one
-          DesignNo: `DES${Date.now()}`, // Temporary ID, backend will generate proper one
         };
-        await dispatch(createProduct(newProduct)).unwrap();
+        console.log("Submitting new product:", newProduct);
+        const result = await dispatch(createProduct(newProduct)).unwrap();
+        console.log("Product creation result:", result);
         // Show success message
         alert("Product created successfully!");
       }

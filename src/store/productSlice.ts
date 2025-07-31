@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import type { ProductDetails } from "../types";
+import type { AddProduct, ProductDetails } from "../types";
 import api from "../services/api";
 import { API_ENDPOINTS } from "../services/apiEndpoints";
 
@@ -43,11 +43,14 @@ export const fetchProducts = createAsyncThunk(
 
 export const createProduct = createAsyncThunk(
   "products/createProduct",
-  async (product: ProductDetails, { rejectWithValue }) => {
+  async (product: AddProduct, { rejectWithValue }) => {
     try {
+      console.log("Creating product:", product);
       const response = await api.post(API_ENDPOINTS.CREATE_PRODUCT, product);
+      console.log("Create product response:", response.data);
       return response.data;
     } catch (error) {
+      console.error("Create product error:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to create product";
       return rejectWithValue(errorMessage);
@@ -60,7 +63,7 @@ export const updateProduct = createAsyncThunk(
   async (product: ProductDetails, { rejectWithValue }) => {
     try {
       const response = await api.put(
-        API_ENDPOINTS.UPDATE_PRODUCT.replace(":id", product.DesignNo),
+        API_ENDPOINTS.UPDATE_PRODUCT.replace(":id", product._id),
         product
       );
       return response.data;
@@ -142,7 +145,10 @@ const productSlice = createSlice({
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.loading = false;
-        state.products.push(action.payload);
+        // Ensure the response data is properly structured
+        if (action.payload && typeof action.payload === 'object') {
+          state.products.push(action.payload as ProductDetails);
+        }
       })
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false;
@@ -156,7 +162,7 @@ const productSlice = createSlice({
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.products.findIndex(
-          (p) => p.DesignNo === action.payload.DesignNo
+          (p) => p._id === action.payload._id
         );
         if (index !== -1) {
           state.products[index] = action.payload;
@@ -174,7 +180,7 @@ const productSlice = createSlice({
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.loading = false;
         state.products = state.products.filter(
-          (p) => p.DesignNo !== action.payload
+          (p) => p._id !== action.payload
         );
       })
       .addCase(deleteProduct.rejected, (state, action) => {
