@@ -16,7 +16,7 @@ import {
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 
 // Product schema matching database
 const productSchema = z.object({
@@ -235,13 +235,14 @@ export const ProductFormDrawer = ({
               disabled={loading}
               className="flex-1"
             >
-              {loading
-                ? mode === "edit"
-                  ? "Updating..."
-                  : "Adding..."
-                : mode === "edit"
-                ? "Update Product"
-                : "Add Product"}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {mode === "edit" ? "Updating..." : "Adding..."}
+                </>
+              ) : (
+                mode === "edit" ? "Update Product" : "Add Product"
+              )}
             </Button>
           </div>
         </DrawerFooter>

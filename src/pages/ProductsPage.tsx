@@ -3,6 +3,9 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ExpandableCard } from "../components/ExpandableCard";
 import { ProductFormDrawer } from "../components/ProductFormDrawer";
 import { SearchBar } from "../components/SearchBar";
+import { SkeletonLoader } from "../components/SkeletonLoader";
+import { Button } from "../components/ui/button";
+import { Loader2 } from "lucide-react";
 import type { ProductDetails } from "../types";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 import {
@@ -53,8 +56,11 @@ export const ProductsPage = () => {
       try {
         await dispatch(deleteProduct(deleteDialog.product.DesignNo)).unwrap();
         setDeleteDialog({ isOpen: false, product: null });
+        // Show success message
+        alert("Product deleted successfully!");
       } catch (err) {
         console.error("Error deleting product:", err);
+        alert("Error deleting product. Please try again.");
       }
     }
   };
@@ -70,6 +76,8 @@ export const ProductsPage = () => {
           DesignNo: selectedProduct.DesignNo,
         };
         await dispatch(updateProduct(updatedProduct)).unwrap();
+        // Show success message
+        alert("Product updated successfully!");
       } else {
         // Add new product - generate temporary DesignNo for demo
         const newProduct: ProductDetails = {
@@ -77,10 +85,13 @@ export const ProductsPage = () => {
           DesignNo: `DES${Date.now()}`, // Temporary ID, backend will generate proper one
         };
         await dispatch(createProduct(newProduct)).unwrap();
+        // Show success message
+        alert("Product created successfully!");
       }
       setSelectedProduct(null);
     } catch (err) {
       console.error("Error saving product:", err);
+      alert("Error saving product. Please try again.");
     }
   };
 
@@ -92,8 +103,26 @@ export const ProductsPage = () => {
     <div className="min-h-screen bg-gray-50 p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Products</h1>
-        <p className="text-gray-600">Manage your product catalog</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Products</h1>
+            <p className="text-gray-600">Manage your product catalog</p>
+          </div>
+          <Button
+            onClick={() => dispatch(fetchProducts())}
+            disabled={loading}
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <span>↻</span>
+            )}
+            <span>Refresh</span>
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -123,10 +152,7 @@ export const ProductsPage = () => {
       {/* Products List */}
       <div className="space-y-4 mb-20">
         {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading products...</p>
-          </div>
+          <SkeletonLoader count={6} type="product" />
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">
