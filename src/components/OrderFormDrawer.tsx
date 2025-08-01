@@ -25,29 +25,60 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 
-// Order schema matching database
+// Enhanced Order schema with better validation
 const orderSchema = z.object({
   Date: z.string().min(1, "Date is required"),
-  CustomerName: z.string().min(1, "Customer name is required"),
-  Address: z.string().min(1, "Address is required"),
-  PhoneNo: z.string().min(10, "Valid phone number is required"),
-  Agent: z.string().min(1, "Agent is required"),
-  Transport: z.string().min(1, "Transport is required"),
-  PaymentTerms: z.string().min(1, "Payment terms are required"),
-  Remark: z.string().optional(),
+  CustomerName: z.string()
+    .min(1, "Customer name is required")
+    .min(2, "Customer name must be at least 2 characters")
+    .max(100, "Customer name must be less than 100 characters")
+    .regex(/^[a-zA-Z\s]+$/, "Customer name can only contain letters and spaces"),
+  Address: z.string()
+    .min(1, "Address is required")
+    .min(10, "Address must be at least 10 characters")
+    .max(500, "Address must be less than 500 characters"),
+  PhoneNo: z.string()
+    .min(1, "Phone number is required")
+    .regex(/^[0-9+\-\s()]+$/, "Phone number can only contain numbers, spaces, and symbols")
+    .min(10, "Phone number must be at least 10 digits")
+    .max(15, "Phone number must be less than 15 digits"),
+  Agent: z.string()
+    .min(1, "Agent is required")
+    .min(2, "Agent name must be at least 2 characters")
+    .max(100, "Agent name must be less than 100 characters"),
+  Transport: z.string()
+    .min(1, "Transport is required")
+    .min(2, "Transport must be at least 2 characters")
+    .max(100, "Transport must be less than 100 characters"),
+  PaymentTerms: z.string()
+    .min(1, "Payment terms are required")
+    .min(2, "Payment terms must be at least 2 characters")
+    .max(200, "Payment terms must be less than 200 characters"),
+  Remark: z.string()
+    .max(1000, "Remark must be less than 1000 characters")
+    .optional(),
   OrderDetails: z
     .array(
       z.object({
         DesignNo: z.string().min(1, "Design number is required"),
-        Quantity: z.number().min(1, "Quantity must be at least 1"),
-        UnitPrice: z.number().min(0, "Unit price must be positive"),
-        TotalPrice: z.number().min(0, "Total price must be positive"),
+        Quantity: z.number()
+          .min(1, "Quantity must be at least 1")
+          .max(999, "Quantity cannot exceed 999"),
+        UnitPrice: z.number()
+          .min(0, "Unit price must be positive")
+          .max(999999, "Unit price cannot exceed ₹999,999"),
+        TotalPrice: z.number()
+          .min(0, "Total price must be positive")
+          .max(999999999, "Total price cannot exceed ₹999,999,999"),
       })
     )
-    .min(1, "At least one order detail is required"),
-  totalAmount: z.number().min(0, "Total amount must be positive"),
+    .min(1, "At least one order detail is required")
+    .max(50, "Cannot add more than 50 items"),
+  totalAmount: z.number()
+    .min(0, "Total amount must be positive")
+    .max(999999999, "Total amount cannot exceed ₹999,999,999"),
 });
 
 type OrderFormData = z.infer<typeof orderSchema>;
@@ -71,13 +102,17 @@ export const OrderFormDrawer = ({
   ]);
   const [loading, setLoading] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid, isDirty },
     reset,
     setValue,
+    watch,
+    trigger,
   } = useForm<OrderFormData>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
@@ -94,7 +129,26 @@ export const OrderFormDrawer = ({
       ],
       totalAmount: 0,
     },
+    mode: "onChange", // Enable real-time validation
   });
+
+  // Watch form values for real-time validation
+  const watchedValues = watch();
+
+  // Validate form in real-time
+  useEffect(() => {
+    const validateForm = async () => {
+      const isValidForm = await trigger();
+      setIsFormValid(isValidForm);
+      
+      // Clear field errors when form becomes valid
+      if (isValidForm) {
+        setFieldErrors({});
+      }
+    };
+
+    validateForm();
+  }, [watchedValues, trigger]);
 
   // Get available products (excluding already selected ones)
   const getAvailableProducts = (currentIndex: number): ProductDetails[] => {
@@ -133,7 +187,17 @@ export const OrderFormDrawer = ({
     }
   }, [order, mode, setValue]);
 
+
+
   const addOrderDetail = () => {
+    if (orderDetails.length >= 50) {
+      setFieldErrors(prev => ({
+        ...prev,
+        orderDetails: "Cannot add more than 50 items"
+      }));
+      return;
+    }
+    
     const newDetail = {
       DesignNo: "",
       Quantity: 1,
@@ -141,6 +205,10 @@ export const OrderFormDrawer = ({
       TotalPrice: 0,
     };
     setOrderDetails([...orderDetails, newDetail]);
+    setFieldErrors(prev => {
+      const { orderDetails, ...rest } = prev;
+      return rest;
+    });
   };
 
   const removeOrderDetail = (index: number) => {
@@ -189,9 +257,82 @@ export const OrderFormDrawer = ({
     setValue("totalAmount", totalAmount);
   };
 
+  // Enhanced input validation
+  const validateInput = (field: string, value: string | number) => {
+    let error = "";
+    
+    switch (field) {
+      case "CustomerName":
+        if (!value || String(value).trim().length === 0) {
+          error = "Customer name is required";
+        } else if (String(value).length < 2) {
+          error = "Customer name must be at least 2 characters";
+        } else if (!/^[a-zA-Z\s]+$/.test(String(value))) {
+          error = "Customer name can only contain letters and spaces";
+        }
+        break;
+      case "PhoneNo":
+        if (!value || String(value).trim().length === 0) {
+          error = "Phone number is required";
+        } else if (!/^[0-9+\-\s()]+$/.test(String(value))) {
+          error = "Phone number can only contain numbers, spaces, and symbols";
+        } else if (String(value).replace(/[^0-9]/g, '').length < 10) {
+          error = "Phone number must be at least 10 digits";
+        }
+        break;
+      case "Address":
+        if (!value || String(value).trim().length === 0) {
+          error = "Address is required";
+        } else if (String(value).length < 10) {
+          error = "Address must be at least 10 characters";
+        }
+        break;
+      case "Quantity":
+        const numValue = Number(value);
+        if (isNaN(numValue) || numValue < 1) {
+          error = "Quantity must be at least 1";
+        } else if (numValue > 999) {
+          error = "Quantity cannot exceed 999";
+        }
+        break;
+      case "UnitPrice":
+        const priceValue = Number(value);
+        if (isNaN(priceValue) || priceValue < 0) {
+          error = "Unit price must be positive";
+        } else if (priceValue > 999999) {
+          error = "Unit price cannot exceed ₹999,999";
+        }
+        break;
+    }
+    
+    return error;
+  };
+
+  // Handle input change with validation
+  const handleInputChange = (field: string, value: string | number) => {
+    const error = validateInput(field, value);
+    
+    if (error) {
+      setFieldErrors(prev => ({ ...prev, [field]: error }));
+    } else {
+      setFieldErrors(prev => {
+        const { [field]: _, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
   const onSubmitForm = async (data: OrderFormData) => {
     try {
       setLoading(true);
+      
+      // Final validation before submission
+      const isValidForm = await trigger();
+      if (!isValidForm) {
+        setLoading(false);
+        return;
+      }
+
       const orderData = {
         ...data,
         OrderDetails: orderDetails,
@@ -209,9 +350,14 @@ export const OrderFormDrawer = ({
       setOrderDetails([
         { DesignNo: "", Quantity: 1, UnitPrice: 0, TotalPrice: 0 },
       ]);
+      setFieldErrors({});
       setIsOpen(false);
     } catch (error) {
       console.error("Error submitting order:", error);
+      setFieldErrors(prev => ({
+        ...prev,
+        submit: "Failed to submit order. Please try again."
+      }));
     } finally {
       setLoading(false);
     }
@@ -223,6 +369,7 @@ export const OrderFormDrawer = ({
     setOrderDetails([
       { DesignNo: "", Quantity: 1, UnitPrice: 0, TotalPrice: 0 },
     ]);
+    setFieldErrors({});
     if (onClose) {
       onClose();
     }
@@ -234,6 +381,7 @@ export const OrderFormDrawer = ({
     if (!open) {
       reset();
       setIsKeyboardOpen(false); // Reset keyboard state when drawer closes
+      setFieldErrors({});
       if (onClose) {
         onClose();
       }
@@ -282,8 +430,51 @@ export const OrderFormDrawer = ({
     }, 300); // Reduced delay for faster response
   };
 
+  // Enhanced input handling with debouncing
+  const [inputDebounceTimers, setInputDebounceTimers] = useState<Record<string, number>>({});
+
+  const debouncedInputChange = (field: string, value: string | number, callback: () => void) => {
+    // Clear existing timer for this field
+    if (inputDebounceTimers[field]) {
+      clearTimeout(inputDebounceTimers[field]);
+    }
+
+    // Set new timer
+    const timer = setTimeout(() => {
+      callback();
+      setInputDebounceTimers(prev => {
+        const { [field]: _, ...rest } = prev;
+        return rest;
+      });
+    }, 300); // 300ms debounce
+
+    setInputDebounceTimers(prev => ({
+      ...prev,
+      [field]: timer
+    }));
+  };
+
+  // Cleanup debounce timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(inputDebounceTimers).forEach(timer => {
+        clearTimeout(timer);
+      });
+    };
+  }, [inputDebounceTimers]);
+
   const handleInputBlur = () => {
     setIsKeyboardOpen(false); // Reset keyboard state when input loses focus
+  };
+
+  // Format currency for display
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
   };
 
   return (
@@ -313,16 +504,29 @@ export const OrderFormDrawer = ({
           <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
             {/* Customer Name */}
             <div className="space-y-2">
-              <Label htmlFor="CustomerName">Customer Name *</Label>
+              <Label htmlFor="CustomerName" className="flex items-center gap-2">
+                Customer Name *
+                {errors.CustomerName && (
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                )}
+                {!errors.CustomerName && watchedValues.CustomerName && (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                )}
+              </Label>
               <Input
                 id="CustomerName"
                 {...register("CustomerName")}
                 placeholder="Enter customer name"
                 onFocus={() => handleInputFocus("CustomerName")}
-                onBlur={handleInputBlur}
+                onBlur={(e) => {
+                  handleInputBlur();
+                  handleInputChange("CustomerName", e.target.value);
+                }}
+                className={errors.CustomerName ? "border-red-500 focus:border-red-500" : ""}
               />
               {errors.CustomerName && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   {errors.CustomerName.message}
                 </p>
               )}
@@ -331,9 +535,15 @@ export const OrderFormDrawer = ({
             {/* Date */}
             <div className="space-y-2">
               <Label htmlFor="Date">Date *</Label>
-              <Input id="Date" type="date" {...register("Date")} />
+              <Input 
+                id="Date" 
+                type="date" 
+                {...register("Date")}
+                className={errors.Date ? "border-red-500 focus:border-red-500" : ""}
+              />
               {errors.Date && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   {errors.Date.message}
                 </p>
               )}
@@ -341,15 +551,30 @@ export const OrderFormDrawer = ({
 
             {/* Address */}
             <div className="space-y-2">
-              <Label htmlFor="Address">Address *</Label>
+              <Label htmlFor="Address" className="flex items-center gap-2">
+                Address *
+                {errors.Address && (
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                )}
+                {!errors.Address && watchedValues.Address && (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                )}
+              </Label>
               <Textarea
                 id="Address"
                 {...register("Address")}
                 placeholder="Enter customer address"
                 rows={3}
+                onFocus={() => handleInputFocus("Address")}
+                onBlur={(e) => {
+                  handleInputBlur();
+                  handleInputChange("Address", e.target.value);
+                }}
+                className={errors.Address ? "border-red-500 focus:border-red-500" : ""}
               />
               {errors.Address && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   {errors.Address.message}
                 </p>
               )}
@@ -357,15 +582,37 @@ export const OrderFormDrawer = ({
 
             {/* Phone Number */}
             <div className="space-y-2">
-              <Label htmlFor="PhoneNo">Phone Number *</Label>
+              <Label htmlFor="PhoneNo" className="flex items-center gap-2">
+                Phone Number *
+                {errors.PhoneNo && (
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                )}
+                {!errors.PhoneNo && watchedValues.PhoneNo && (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                )}
+              </Label>
               <Input
                 id="PhoneNo"
                 type="tel"
                 {...register("PhoneNo")}
-                placeholder="Enter phone number"
+                placeholder="Enter phone number (e.g., +91 98765 43210)"
+                onFocus={() => handleInputFocus("PhoneNo")}
+                onBlur={(e) => {
+                  handleInputBlur();
+                  handleInputChange("PhoneNo", e.target.value);
+                }}
+                onKeyPress={(e) => {
+                  // Allow only numbers, spaces, +, -, (, )
+                  const allowedChars = /[0-9+\-\s()]/;
+                  if (!allowedChars.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                className={errors.PhoneNo ? "border-red-500 focus:border-red-500" : ""}
               />
               {errors.PhoneNo && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   {errors.PhoneNo.message}
                 </p>
               )}
@@ -378,9 +625,13 @@ export const OrderFormDrawer = ({
                 id="Agent"
                 {...register("Agent")}
                 placeholder="Enter agent name"
+                onFocus={() => handleInputFocus("Agent")}
+                onBlur={handleInputBlur}
+                className={errors.Agent ? "border-red-500 focus:border-red-500" : ""}
               />
               {errors.Agent && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   {errors.Agent.message}
                 </p>
               )}
@@ -393,9 +644,13 @@ export const OrderFormDrawer = ({
                 id="Transport"
                 {...register("Transport")}
                 placeholder="e.g., Express Delivery"
+                onFocus={() => handleInputFocus("Transport")}
+                onBlur={handleInputBlur}
+                className={errors.Transport ? "border-red-500 focus:border-red-500" : ""}
               />
               {errors.Transport && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   {errors.Transport.message}
                 </p>
               )}
@@ -408,9 +663,13 @@ export const OrderFormDrawer = ({
                 id="PaymentTerms"
                 {...register("PaymentTerms")}
                 placeholder="e.g., 50% Advance"
+                onFocus={() => handleInputFocus("PaymentTerms")}
+                onBlur={handleInputBlur}
+                className={errors.PaymentTerms ? "border-red-500 focus:border-red-500" : ""}
               />
               {errors.PaymentTerms && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   {errors.PaymentTerms.message}
                 </p>
               )}
@@ -424,7 +683,16 @@ export const OrderFormDrawer = ({
                 {...register("Remark")}
                 placeholder="Additional notes..."
                 rows={3}
+                onFocus={() => handleInputFocus("Remark")}
+                onBlur={handleInputBlur}
+                className={errors.Remark ? "border-red-500 focus:border-red-500" : ""}
               />
+              {errors.Remark && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {errors.Remark.message}
+                </p>
+              )}
             </div>
 
             {/* Order Details */}
@@ -436,10 +704,18 @@ export const OrderFormDrawer = ({
                   variant="outline"
                   size="sm"
                   onClick={addOrderDetail}
+                  disabled={orderDetails.length >= 50}
                 >
                   Add Item
                 </Button>
               </div>
+
+              {fieldErrors.orderDetails && (
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  {fieldErrors.orderDetails}
+                </p>
+              )}
 
               {orderDetails.map((detail, index) => {
                 const availableProducts = getAvailableProducts(index);
@@ -500,16 +776,31 @@ export const OrderFormDrawer = ({
                         <Input
                           type="number"
                           min="1"
+                          max="999"
                           value={detail.Quantity}
-                          onChange={(e) =>
-                            updateOrderDetail(
-                              index,
-                              "Quantity",
-                              Number(e.target.value)
-                            )
-                          }
+                          onChange={(e) => {
+                            const value = Number(e.target.value);
+                            if (value >= 0) {
+                              updateOrderDetail(index, "Quantity", value);
+                              handleInputChange("Quantity", value);
+                            }
+                          }}
+                          onBlur={(e) => handleInputChange("Quantity", Number(e.target.value))}
+                          onKeyPress={(e) => {
+                            // Allow only numbers and backspace
+                            const allowedChars = /[0-9]/;
+                            if (!allowedChars.test(e.key) && e.key !== 'Backspace') {
+                              e.preventDefault();
+                            }
+                          }}
                           placeholder="1"
+                          className={fieldErrors.Quantity ? "border-red-500 focus:border-red-500" : ""}
                         />
+                        {fieldErrors.Quantity && (
+                          <p className="text-xs text-red-500 mt-1">
+                            {fieldErrors.Quantity}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <Label>Unit Price (₹) *</Label>
@@ -517,25 +808,43 @@ export const OrderFormDrawer = ({
                           type="number"
                           step="0.01"
                           min="0"
+                          max="999999"
                           value={detail.UnitPrice}
-                          onChange={(e) =>
-                            updateOrderDetail(
-                              index,
-                              "UnitPrice",
-                              Number(e.target.value)
-                            )
-                          }
+                          onChange={(e) => {
+                            const value = Number(e.target.value);
+                            if (value >= 0) {
+                              updateOrderDetail(index, "UnitPrice", value);
+                              handleInputChange("UnitPrice", value);
+                            }
+                          }}
+                          onBlur={(e) => handleInputChange("UnitPrice", Number(e.target.value))}
+                          onKeyPress={(e) => {
+                            // Allow only numbers, decimal point, and backspace
+                            const allowedChars = /[0-9.]/;
+                            if (!allowedChars.test(e.key) && e.key !== 'Backspace') {
+                              e.preventDefault();
+                            }
+                            // Prevent multiple decimal points
+                            if (e.key === '.' && e.currentTarget.value.includes('.')) {
+                              e.preventDefault();
+                            }
+                          }}
                           placeholder="0.00"
+                          className={fieldErrors.UnitPrice ? "border-red-500 focus:border-red-500" : ""}
                         />
+                        {fieldErrors.UnitPrice && (
+                          <p className="text-xs text-red-500 mt-1">
+                            {fieldErrors.UnitPrice}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <Label>Total Price (₹)</Label>
                         <Input
-                          type="number"
-                          step="0.01"
-                          value={detail.TotalPrice}
+                          type="text"
+                          value={formatCurrency(detail.TotalPrice)}
                           readOnly
-                          className="bg-gray-50"
+                          className="bg-gray-50 font-semibold"
                         />
                       </div>
                     </div>
@@ -564,23 +873,31 @@ export const OrderFormDrawer = ({
               <Label htmlFor="totalAmount">Total Amount (₹) *</Label>
               <Input
                 id="totalAmount"
-                type="number"
-                step="0.01"
-                min="0"
-                {...register("totalAmount", { valueAsNumber: true })}
-                value={orderDetails.reduce(
+                type="text"
+                value={formatCurrency(orderDetails.reduce(
                   (sum, detail) => sum + detail.TotalPrice,
                   0
-                )}
+                ))}
                 readOnly
-                className="bg-gray-50 font-semibold"
+                className="bg-gray-50 font-semibold text-lg"
               />
               {errors.totalAmount && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
                   {errors.totalAmount.message}
                 </p>
               )}
             </div>
+
+            {/* Submit Error */}
+            {fieldErrors.submit && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  {fieldErrors.submit}
+                </p>
+              </div>
+            )}
           </form>
         </div>
 
@@ -597,7 +914,7 @@ export const OrderFormDrawer = ({
             </DrawerClose>
             <Button
               onClick={handleSubmit(onSubmitForm)}
-              disabled={loading}
+              disabled={loading || !isFormValid}
               className="flex-1"
             >
               {loading ? (
