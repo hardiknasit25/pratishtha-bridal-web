@@ -108,7 +108,7 @@ export const OrderFormDrawer = ({
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid, isDirty },
+    formState: { errors },
     reset,
     setValue,
     watch,
@@ -206,8 +206,9 @@ export const OrderFormDrawer = ({
     };
     setOrderDetails([...orderDetails, newDetail]);
     setFieldErrors(prev => {
-      const { orderDetails, ...rest } = prev;
-      return rest;
+      const newErrors = { ...prev };
+      delete newErrors.orderDetails;
+      return newErrors;
     });
   };
 
@@ -287,22 +288,24 @@ export const OrderFormDrawer = ({
           error = "Address must be at least 10 characters";
         }
         break;
-      case "Quantity":
-        const numValue = Number(value);
-        if (isNaN(numValue) || numValue < 1) {
-          error = "Quantity must be at least 1";
-        } else if (numValue > 999) {
-          error = "Quantity cannot exceed 999";
-        }
-        break;
-      case "UnitPrice":
-        const priceValue = Number(value);
-        if (isNaN(priceValue) || priceValue < 0) {
-          error = "Unit price must be positive";
-        } else if (priceValue > 999999) {
-          error = "Unit price cannot exceed ₹999,999";
-        }
-        break;
+             case "Quantity": {
+         const numValue = Number(value);
+         if (isNaN(numValue) || numValue < 1) {
+           error = "Quantity must be at least 1";
+         } else if (numValue > 999) {
+           error = "Quantity cannot exceed 999";
+         }
+         break;
+       }
+       case "UnitPrice": {
+         const priceValue = Number(value);
+         if (isNaN(priceValue) || priceValue < 0) {
+           error = "Unit price must be positive";
+         } else if (priceValue > 999999) {
+           error = "Unit price cannot exceed ₹999,999";
+         }
+         break;
+       }
     }
     
     return error;
@@ -314,12 +317,13 @@ export const OrderFormDrawer = ({
     
     if (error) {
       setFieldErrors(prev => ({ ...prev, [field]: error }));
-    } else {
-      setFieldErrors(prev => {
-        const { [field]: _, ...rest } = prev;
-        return rest;
-      });
-    }
+         } else {
+       setFieldErrors(prev => {
+         const newErrors = { ...prev };
+         delete newErrors[field];
+         return newErrors;
+       });
+     }
   };
 
   const onSubmitForm = async (data: OrderFormData) => {
@@ -430,38 +434,7 @@ export const OrderFormDrawer = ({
     }, 300); // Reduced delay for faster response
   };
 
-  // Enhanced input handling with debouncing
-  const [inputDebounceTimers, setInputDebounceTimers] = useState<Record<string, number>>({});
 
-  const debouncedInputChange = (field: string, value: string | number, callback: () => void) => {
-    // Clear existing timer for this field
-    if (inputDebounceTimers[field]) {
-      clearTimeout(inputDebounceTimers[field]);
-    }
-
-    // Set new timer
-    const timer = setTimeout(() => {
-      callback();
-      setInputDebounceTimers(prev => {
-        const { [field]: _, ...rest } = prev;
-        return rest;
-      });
-    }, 300); // 300ms debounce
-
-    setInputDebounceTimers(prev => ({
-      ...prev,
-      [field]: timer
-    }));
-  };
-
-  // Cleanup debounce timers on unmount
-  useEffect(() => {
-    return () => {
-      Object.values(inputDebounceTimers).forEach(timer => {
-        clearTimeout(timer);
-      });
-    };
-  }, [inputDebounceTimers]);
 
   const handleInputBlur = () => {
     setIsKeyboardOpen(false); // Reset keyboard state when input loses focus
