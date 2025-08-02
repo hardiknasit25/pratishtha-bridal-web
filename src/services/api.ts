@@ -15,15 +15,15 @@ const api = axios.create({
 });
 
 // COMMENTED OUT: Request interceptor for testing
-/*
-// Request interceptor
+
+//  Request interceptor
 api.interceptors.request.use(
   (config) => {
     // Add auth token to headers if available
-    const token = cookieService.getAuthToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // const token = cookieService.getAuthToken();
+    // if (token) {
+    //   config.headers.Authorization = `Bearer ${token}`;
+    // }
     return config;
   },
   (error) => {
@@ -32,10 +32,9 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-*/
 
 // COMMENTED OUT: Response interceptor for testing
-/*
+
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
@@ -53,11 +52,11 @@ api.interceptors.response.use(
     // Handle authentication errors
     if (error.response?.status === 401) {
       // Clear auth token on unauthorized
-      cookieService.removeAuthToken();
+      // cookieService.removeAuthToken();
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("username");
       console.log("Authentication failed, cleared auth token");
-      
+
       // Only redirect to login if not already on login page and not on signup/forgot password pages
       const currentPath = window.location.pathname;
       const publicPages = ["/login", "/signup", "/forgot-password"];
@@ -90,6 +89,5 @@ api.interceptors.response.use(
     }
   }
 );
-*/
 
 export default api;
