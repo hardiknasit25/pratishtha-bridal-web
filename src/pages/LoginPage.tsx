@@ -72,7 +72,7 @@ export const LoginPage = () => {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Pratishtha Bridal
+            Velleta Heritage
           </h1>
           <p className="text-gray-600">
             Welcome back! Please sign in to your account.

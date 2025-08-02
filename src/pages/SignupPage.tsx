@@ -92,7 +92,7 @@ export const SignupPage = () => {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Pratishtha Bridal
+            Velleta Heritage
           </h1>
           <p className="text-gray-600">Create your account to get started.</p>
         </div>
