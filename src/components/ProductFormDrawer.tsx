@@ -45,7 +45,6 @@ export const ProductFormDrawer = ({
 }: ProductFormDrawerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   const {
     register,
@@ -114,55 +113,6 @@ export const ProductFormDrawer = ({
     }
   };
 
-  // Handle input focus for keyboard handling
-  const handleInputFocus = (fieldName: string) => {
-    // Check if we're on mobile
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      setIsKeyboardOpen(true);
-    }
-
-    // Add a delay to ensure the keyboard is open
-    setTimeout(() => {
-      const input = document.getElementById(fieldName);
-      if (input) {
-        if (isMobile) {
-          // For mobile, use a more aggressive scroll strategy
-          const scrollContainer = input.closest(".overflow-y-auto");
-          if (scrollContainer) {
-            // Scroll to the top of the form to ensure first field is visible
-            if (fieldName === "TypeOfGarment") {
-              scrollContainer.scrollTop = 0;
-            } else {
-              // For other fields, scroll them into view
-              const inputRect = input.getBoundingClientRect();
-              const containerRect = scrollContainer.getBoundingClientRect();
-              const offset = inputRect.top - containerRect.top - 20; // 20px padding
-              scrollContainer.scrollTop += offset;
-            }
-          } else {
-            // Fallback to scrollIntoView
-            input.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-        } else {
-          // For desktop, just ensure it's visible
-          input.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-          });
-        }
-      }
-    }, 300); // Reduced delay for faster response
-  };
-
-  const handleInputBlur = () => {
-    // Reset keyboard state when input loses focus
-    setIsKeyboardOpen(false);
-  };
-
   return (
     <Drawer open={isOpen} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
@@ -170,11 +120,7 @@ export const ProductFormDrawer = ({
           <Plus className="w-6 h-6" />
         </Button>
       </DrawerTrigger>
-      <DrawerContent
-        className={`overflow-hidden transition-all duration-300 ${
-          isKeyboardOpen ? "max-h-[60vh]" : "max-h-[85vh] sm:max-h-[80vh]"
-        }`}
-      >
+      <DrawerContent className="overflow-hidden transition-all duration-300 max-h-[85vh] sm:max-h-[80vh]">
         <DrawerHeader className="flex-shrink-0">
           <DrawerTitle>
             {mode === "edit" ? "Edit Product" : "Add New Product"}
@@ -201,8 +147,6 @@ export const ProductFormDrawer = ({
                 })}
                 placeholder="e.g., Bridal Lehenga"
                 className={errors.TypeOfGarment ? "border-red-500" : ""}
-                onFocus={() => handleInputFocus("TypeOfGarment")}
-                onBlur={handleInputBlur}
               />
               {errors.TypeOfGarment && (
                 <p className="text-sm text-destructive">
@@ -221,8 +165,6 @@ export const ProductFormDrawer = ({
                 })}
                 placeholder="e.g., Red"
                 className={errors.ColorOfGarment ? "border-red-500" : ""}
-                onFocus={() => handleInputFocus("ColorOfGarment")}
-                onBlur={handleInputBlur}
               />
               {errors.ColorOfGarment && (
                 <p className="text-sm text-destructive">
@@ -241,8 +183,6 @@ export const ProductFormDrawer = ({
                 })}
                 placeholder="e.g., Gold"
                 className={errors.BlouseColor ? "border-red-500" : ""}
-                onFocus={() => handleInputFocus("BlouseColor")}
-                onBlur={handleInputBlur}
               />
               {errors.BlouseColor && (
                 <p className="text-sm text-destructive">
@@ -261,8 +201,6 @@ export const ProductFormDrawer = ({
                 })}
                 placeholder="e.g., Red"
                 className={errors.DupptaColor ? "border-red-500" : ""}
-                onFocus={() => handleInputFocus("DupptaColor")}
-                onBlur={handleInputBlur}
               />
               {errors.DupptaColor && (
                 <p className="text-sm text-destructive">
@@ -286,8 +224,6 @@ export const ProductFormDrawer = ({
                 })}
                 placeholder="0.00"
                 className={errors.Rate ? "border-red-500" : ""}
-                onFocus={() => handleInputFocus("Rate")}
-                onBlur={handleInputBlur}
               />
               {errors.Rate && (
                 <p className="text-sm text-destructive">
@@ -310,8 +246,6 @@ export const ProductFormDrawer = ({
                 })}
                 placeholder="e.g., 1001"
                 className={errors.FixCode ? "border-red-500" : ""}
-                onFocus={() => handleInputFocus("FixCode")}
-                onBlur={handleInputBlur}
               />
               {errors.FixCode && (
                 <p className="text-sm text-destructive">

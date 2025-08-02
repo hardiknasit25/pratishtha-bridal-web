@@ -119,7 +119,7 @@ export const OrderFormDrawer = ({
   ]);
   const [loading, setLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isFormValid, setIsFormValid] = useState(false);
 
@@ -455,7 +455,6 @@ export const OrderFormDrawer = ({
       setIsOpen(open);
       if (!open) {
         reset();
-        setIsKeyboardOpen(false); // Reset keyboard state when drawer closes
         setFieldErrors({});
         if (onClose) {
           onClose();
@@ -465,58 +464,11 @@ export const OrderFormDrawer = ({
       console.error("Error handling drawer state change:", error);
       // Fallback: force close the drawer
       setIsOpen(false);
-      setIsKeyboardOpen(false);
       setFieldErrors({});
       if (onClose) {
         onClose();
       }
     }
-  };
-
-  // Handle input focus for keyboard handling
-  const handleInputFocus = (fieldName: string) => {
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      setIsKeyboardOpen(true);
-    }
-
-    // Add a delay to ensure the keyboard is open
-    setTimeout(() => {
-      const input = document.getElementById(fieldName);
-      if (input) {
-        if (isMobile) {
-          const scrollContainer = input.closest(".overflow-y-auto");
-          if (scrollContainer) {
-            // Special handling for the first field to ensure it's at the very top
-            if (fieldName === "CustomerName") {
-              scrollContainer.scrollTop = 0;
-            } else {
-              // For other fields, scroll them into view with a small offset
-              const inputRect = input.getBoundingClientRect();
-              const containerRect = scrollContainer.getBoundingClientRect();
-              const offset = inputRect.top - containerRect.top - 20; // 20px padding from top
-              scrollContainer.scrollTop += offset;
-            }
-          } else {
-            // Fallback to scrollIntoView if scroll container not found
-            input.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          }
-        } else {
-          // For desktop, just ensure it's visible
-          input.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-          });
-        }
-      }
-    }, 300); // Reduced delay for faster response
-  };
-
-  const handleInputBlur = () => {
-    setIsKeyboardOpen(false); // Reset keyboard state when input loses focus
   };
 
   // Format currency for display
@@ -536,11 +488,7 @@ export const OrderFormDrawer = ({
           <Plus className="w-6 h-6" />
         </Button>
       </DrawerTrigger>
-      <DrawerContent
-        className={`overflow-hidden transition-all duration-300 ${
-          isKeyboardOpen ? "max-h-[60vh]" : "max-h-[85vh] sm:max-h-[80vh]"
-        }`}
-      >
+      <DrawerContent className="overflow-hidden transition-all duration-300 max-h-[85vh] sm:max-h-[80vh]">
         <DrawerHeader className="flex-shrink-0">
           <DrawerTitle>
             {mode === "edit" ? "Edit Order" : "Add New Order"}
@@ -578,9 +526,7 @@ export const OrderFormDrawer = ({
                   id="CustomerName"
                   {...register("CustomerName")}
                   placeholder="Enter customer name"
-                  onFocus={() => handleInputFocus("CustomerName")}
                   onBlur={(e) => {
-                    handleInputBlur();
                     handleInputChange("CustomerName", e.target.value);
                   }}
                   className={
@@ -632,9 +578,7 @@ export const OrderFormDrawer = ({
                   {...register("Address")}
                   placeholder="Enter customer address"
                   rows={3}
-                  onFocus={() => handleInputFocus("Address")}
                   onBlur={(e) => {
-                    handleInputBlur();
                     handleInputChange("Address", e.target.value);
                   }}
                   className={
@@ -665,9 +609,7 @@ export const OrderFormDrawer = ({
                   type="tel"
                   {...register("PhoneNo")}
                   placeholder="Enter phone number (e.g., +91 98765 43210)"
-                  onFocus={() => handleInputFocus("PhoneNo")}
                   onBlur={(e) => {
-                    handleInputBlur();
                     handleInputChange("PhoneNo", e.target.value);
                   }}
                   onKeyPress={(e) => {
@@ -696,8 +638,6 @@ export const OrderFormDrawer = ({
                   id="Agent"
                   {...register("Agent")}
                   placeholder="Enter agent name"
-                  onFocus={() => handleInputFocus("Agent")}
-                  onBlur={handleInputBlur}
                   className={
                     errors.Agent ? "border-red-500 focus:border-red-500" : ""
                   }
@@ -717,8 +657,6 @@ export const OrderFormDrawer = ({
                   id="Transport"
                   {...register("Transport")}
                   placeholder="e.g., Express Delivery"
-                  onFocus={() => handleInputFocus("Transport")}
-                  onBlur={handleInputBlur}
                   className={
                     errors.Transport
                       ? "border-red-500 focus:border-red-500"
@@ -740,8 +678,6 @@ export const OrderFormDrawer = ({
                   id="PaymentTerms"
                   {...register("PaymentTerms")}
                   placeholder="e.g., 50% Advance"
-                  onFocus={() => handleInputFocus("PaymentTerms")}
-                  onBlur={handleInputBlur}
                   className={
                     errors.PaymentTerms
                       ? "border-red-500 focus:border-red-500"
@@ -764,8 +700,6 @@ export const OrderFormDrawer = ({
                   {...register("Remark")}
                   placeholder="Additional notes..."
                   rows={3}
-                  onFocus={() => handleInputFocus("Remark")}
-                  onBlur={handleInputBlur}
                   className={
                     errors.Remark ? "border-red-500 focus:border-red-500" : ""
                   }
