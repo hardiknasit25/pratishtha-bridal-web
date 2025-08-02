@@ -1,5 +1,4 @@
 import axios from "axios";
-import { cookieService } from "./cookieService";
 
 const API_BASE_URL = "https://pratishtha-bridal-backend.vercel.app/api";
 // const API_BASE_URL = "http://localhost:3000/api";

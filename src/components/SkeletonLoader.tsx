@@ -2,12 +2,10 @@ import { Loader2 } from "lucide-react";
 
 interface SkeletonLoaderProps {
   count?: number;
-  type?: "product" | "order" | "card";
 }
 
 export const SkeletonLoader = ({
   count = 3,
-  type = "product",
 }: SkeletonLoaderProps) => {
   const skeletons = Array.from({ length: count }, (_, index) => (
     <div key={index} className="animate-pulse">
