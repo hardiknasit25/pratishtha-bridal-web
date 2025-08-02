@@ -165,7 +165,7 @@ export const OrdersPage = () => {
       {/* Orders List */}
       <div className="space-y-4 mb-20">
         {isLoading ? (
-          <SkeletonLoader count={6} type="order" />
+          <SkeletonLoader count={6} />
         ) : !displayOrders ? (
           <div className="text-center py-8">
             <p className="text-gray-500">Orders data not available.</p>
