@@ -4,50 +4,43 @@ import { ExpandableCard } from "../components/ExpandableCard";
 import { OrderFormDrawer } from "../components/OrderFormDrawer";
 import { SearchBar } from "../components/SearchBar";
 import type { IOrder } from "../types";
-import orderData from "../../OrderData.json";
 import { showToast } from "../components/Toast";
+import { useAppDispatch, useAppSelector } from "../hooks/redux";
+import { Loader2 } from "lucide-react";
+import {
+  createOrder,
+  updateOrder,
+  deleteOrder,
+  setSelectedOrder,
+  clearError,
+  initializeWithMockData,
+} from "../store/orderSlice";
 
 export const OrdersPage = () => {
-  // Local state for orders and UI
-  const [orders, setOrders] = useState<IOrder[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
+  // Redux state
+  const dispatch = useAppDispatch();
+  const { orders, loading, error, selectedOrder } = useAppSelector(
+    (state) => state.orders
+  );
+
+  // Local state for UI
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     order: IOrder | null;
   }>({ isOpen: false, order: null });
 
-  // Load orders from JSON data on component mount
+  // Load orders from Redux store on component mount
   useEffect(() => {
-    const loadOrders = async () => {
-      setLoading(true);
-      setError(null);
+    dispatch(initializeWithMockData());
+  }, [dispatch]);
 
-      try {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Convert string dates to Date objects
-        const ordersWithDates = orderData.map((order) => ({
-          ...order,
-          Date: new Date(order.Date),
-        }));
-
-        setOrders(ordersWithDates as IOrder[]);
-      } catch (err) {
-        console.error("Error loading orders:", err);
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load orders";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
     };
-
-    loadOrders();
-  }, []);
+  }, [dispatch]);
 
   const filteredOrders = orders.filter(
     (order) =>
@@ -57,7 +50,7 @@ export const OrdersPage = () => {
   );
 
   const handleEdit = (order: IOrder) => {
-    setSelectedOrder(order);
+    dispatch(setSelectedOrder(order));
   };
 
   const handleDelete = (order: IOrder) => {
@@ -67,13 +60,7 @@ export const OrdersPage = () => {
   const confirmDelete = async () => {
     if (deleteDialog.order) {
       try {
-        setLoading(true);
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 300));
-
-        setOrders((prev) =>
-          prev.filter((o) => o.OrderNo !== deleteDialog.order!.OrderNo)
-        );
+        await dispatch(deleteOrder(deleteDialog.order.OrderNo)).unwrap();
         setDeleteDialog({ isOpen: false, order: null });
         // Show success message
         showToast.success(
@@ -86,8 +73,6 @@ export const OrdersPage = () => {
           "Delete Failed",
           "Unable to delete the order. Please try again."
         );
-      } finally {
-        setLoading(false);
       }
     }
   };
@@ -116,18 +101,11 @@ export const OrdersPage = () => {
       Date: new Date(data.Date), // Convert string date to Date object
       Remark: data.Remark || "", // Ensure Remark is always a string
     };
+
     try {
-      setLoading(true);
-      setError(null);
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       if (selectedOrder) {
         // Update existing order
-        setOrders((prev) =>
-          prev.map((o) => (o.OrderNo === selectedOrder.OrderNo ? orderData : o))
-        );
+        await dispatch(updateOrder(orderData)).unwrap();
         // Show success message
         showToast.success(
           "Order Updated",
@@ -135,35 +113,65 @@ export const OrdersPage = () => {
         );
       } else {
         // Add new order
-        setOrders((prev) => [...prev, orderData]);
+        await dispatch(createOrder(orderData)).unwrap();
         // Show success message
         showToast.success(
           "Order Created",
           `New order for ${data.CustomerName} has been successfully created.`
         );
       }
-      setSelectedOrder(null);
+      dispatch(setSelectedOrder(null));
     } catch (err) {
       console.error("Error saving order:", err);
       showToast.error(
         "Operation Failed",
         "Unable to save the order. Please try again."
       );
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleDrawerClose = () => {
-    setSelectedOrder(null);
+    dispatch(setSelectedOrder(null));
+  };
+
+  const handleRefresh = () => {
+    dispatch(initializeWithMockData());
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Orders</h1>
-        <p className="text-gray-600">Manage your order catalog</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Orders</h1>
+            <p className="text-gray-600">Manage your order catalog</p>
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+            )}
+            Refresh
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -171,7 +179,7 @@ export const OrdersPage = () => {
           <div className="flex items-center justify-between">
             <p className="text-red-600">Error: {error}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => dispatch(initializeWithMockData())}
               className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
             >
               Retry
