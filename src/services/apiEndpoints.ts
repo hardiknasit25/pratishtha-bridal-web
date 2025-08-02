@@ -1,12 +1,13 @@
 // API Endpoints for Velleta Heritage
 export const API_ENDPOINTS = {
   // Authentication
-  LOGIN: "/auth/login",
-  SIGNUP: "/auth/signup",
-  LOGOUT: "/auth/logout",
-  RESET_PASSWORD: "/auth/reset-password",
-  REFRESH_TOKEN: "/auth/refresh-token",
-  VERIFY_TOKEN: "/auth/verify-token",
+  LOGIN: "/users/login",
+  SIGNUP: "/users/signup",
+  LOGOUT: "/users/logout",
+  FORGOT_PASSWORD: "/users/forgot-password",
+  RESET_PASSWORD: "/users/reset-password",
+  REFRESH_TOKEN: "/users/refresh-token",
+  VERIFY_TOKEN: "/users/verify-token",
 
   // Products
   GET_PRODUCTS: "/products",

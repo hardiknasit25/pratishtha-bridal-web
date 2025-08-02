@@ -15,9 +15,16 @@ const api = axios.create({
   withCredentials: true, // Enable cookies to be sent with requests
 });
 
+// COMMENTED OUT: Request interceptor for testing
+/*
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Add auth token to headers if available
+    const token = cookieService.getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -26,26 +33,16 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+*/
 
+// COMMENTED OUT: Response interceptor for testing
+/*
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log("API Response:", {
-      status: response.status,
-      url: response.config.url,
-      data: response.data,
-    });
-
-    // Handle authentication token from response headers
-    const authToken =
-      response.headers["authorization"] || response.headers["x-auth-token"];
-    if (authToken) {
-      cookieService.setAuthToken(authToken.replace("Bearer ", ""));
-    }
-
     return response;
   },
-  (error) => {
+  async (error) => {
     console.error("API Error Details:", {
       message: error.message,
       status: error.response?.status,
@@ -58,7 +55,16 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Clear auth token on unauthorized
       cookieService.removeAuthToken();
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("username");
       console.log("Authentication failed, cleared auth token");
+      
+      // Only redirect to login if not already on login page and not on signup/forgot password pages
+      const currentPath = window.location.pathname;
+      const publicPages = ["/login", "/signup", "/forgot-password"];
+      if (!publicPages.includes(currentPath)) {
+        window.location.href = "/login";
+      }
     }
 
     // Always return a proper error object to prevent crashes
@@ -85,5 +91,6 @@ api.interceptors.response.use(
     }
   }
 );
+*/
 
 export default api;

@@ -1,18 +1,30 @@
 import { User, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services/authService";
+import { showToast } from "./Toast";
 
 export const Navigation = () => {
   const navigate = useNavigate();
   const username = localStorage.getItem("username");
 
-  const handleLogout = () => {
-    // Clear user session
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("username");
+  const handleLogout = async () => {
+    try {
+      // Call the auth service logout
+      await authService.logout();
 
-    // Redirect to login page
-    navigate("/login");
+      // Show success message
+      showToast.success("Logged Out", "You have been successfully logged out.");
+
+      // Redirect to login page
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Even if logout API fails, clear local data and redirect
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("username");
+      navigate("/login");
+    }
   };
 
   return (

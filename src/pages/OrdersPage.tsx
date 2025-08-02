@@ -1,30 +1,33 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ExpandableCard } from "../components/ExpandableCard";
-import { OrderFormDrawer } from "../components/OrderFormDrawer";
 import { SearchBar } from "../components/SearchBar";
+import { SkeletonLoader } from "../components/SkeletonLoader";
+import { Button } from "../components/ui/button";
 import type { IOrder } from "../types";
 import { showToast } from "../components/Toast";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import {
-  createOrder,
-  updateOrder,
   deleteOrder,
-  setSelectedOrder,
   clearError,
-  initializeWithMockData,
+  fetchOrders,
+  searchOrders,
 } from "../store/orderSlice";
 
 export const OrdersPage = () => {
+  const navigate = useNavigate();
+
   // Redux state
   const dispatch = useAppDispatch();
-  const { orders, loading, error, selectedOrder } = useAppSelector(
+  const { orders, searchResults, loading, error, isSearching } = useAppSelector(
     (state) => state.orders
   );
 
   // Local state for UI
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchActive, setIsSearchActive] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     order: IOrder | null;
@@ -32,7 +35,11 @@ export const OrdersPage = () => {
 
   // Load orders from Redux store on component mount
   useEffect(() => {
-    dispatch(initializeWithMockData());
+    try {
+      dispatch(fetchOrders());
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
   }, [dispatch]);
 
   // Clear error when component unmounts
@@ -42,16 +49,32 @@ export const OrdersPage = () => {
     };
   }, [dispatch]);
 
-  const filteredOrders = orders.filter(
-    (order) =>
-      order.OrderNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.CustomerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.Agent.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Handle search with API call
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
 
-  const handleEdit = (order: IOrder) => {
-    dispatch(setSelectedOrder(order));
+    if (value.trim()) {
+      setIsSearchActive(true);
+      dispatch(searchOrders(value.trim()));
+    } else {
+      setIsSearchActive(false);
+    }
   };
+
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setIsSearchActive(false);
+  };
+
+  // Use search results if searching, otherwise use all orders
+  const displayOrders = isSearchActive ? searchResults : orders;
+  const isLoading = isSearchActive ? isSearching : loading;
+
+  // Temporarily commented out edit functionality
+  // const handleEdit = (order: IOrder) => {
+  //   dispatch(setSelectedOrder(order));
+  // };
 
   const handleDelete = (order: IOrder) => {
     setDeleteDialog({ isOpen: true, order });
@@ -60,13 +83,13 @@ export const OrdersPage = () => {
   const confirmDelete = async () => {
     if (deleteDialog.order) {
       try {
-        await dispatch(deleteOrder(deleteDialog.order.OrderNo)).unwrap();
+        await dispatch(deleteOrder(deleteDialog.order._id)).unwrap();
         setDeleteDialog({ isOpen: false, order: null });
-        // Show success message
         showToast.success(
           "Order Deleted",
           `${deleteDialog.order.OrderNo} has been successfully removed.`
         );
+        dispatch(fetchOrders());
       } catch (err) {
         console.error("Error deleting order:", err);
         showToast.error(
@@ -77,65 +100,16 @@ export const OrdersPage = () => {
     }
   };
 
-  const handleSubmitOrder = async (data: {
-    Date: string;
-    CustomerName: string;
-    Address: string;
-    PhoneNo: string;
-    Agent: string;
-    Transport: string;
-    PaymentTerms: string;
-    OrderDetails: {
-      DesignNo: string;
-      Quantity: number;
-      UnitPrice: number;
-      TotalPrice: number;
-    }[];
-    totalAmount: number;
-    Remark?: string;
-  }) => {
-    const orderData: IOrder = {
-      ...data,
-      _id: selectedOrder ? selectedOrder._id : `order_${Date.now()}`, // Preserve existing _id or generate temporary one
-      OrderNo: selectedOrder ? selectedOrder.OrderNo : `ORD${Date.now()}`, // Preserve existing OrderNo or generate temporary one
-      Date: new Date(data.Date), // Convert string date to Date object
-      Remark: data.Remark || "", // Ensure Remark is always a string
-    };
-
-    try {
-      if (selectedOrder) {
-        // Update existing order
-        await dispatch(updateOrder(orderData)).unwrap();
-        // Show success message
-        showToast.success(
-          "Order Updated",
-          `${selectedOrder.OrderNo} has been successfully updated.`
-        );
-      } else {
-        // Add new order
-        await dispatch(createOrder(orderData)).unwrap();
-        // Show success message
-        showToast.success(
-          "Order Created",
-          `New order for ${data.CustomerName} has been successfully created.`
-        );
-      }
-      dispatch(setSelectedOrder(null));
-    } catch (err) {
-      console.error("Error saving order:", err);
-      showToast.error(
-        "Operation Failed",
-        "Unable to save the order. Please try again."
-      );
-    }
+  const handleAddOrder = () => {
+    navigate("/orders/add");
   };
 
-  const handleDrawerClose = () => {
-    dispatch(setSelectedOrder(null));
+  const handleEditOrder = (order: IOrder) => {
+    navigate(`/orders/edit/${order._id}`);
   };
 
   const handleRefresh = () => {
-    dispatch(initializeWithMockData());
+    dispatch(fetchOrders());
   };
 
   return (
@@ -147,30 +121,20 @@ export const OrdersPage = () => {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Orders</h1>
             <p className="text-gray-600">Manage your order catalog</p>
           </div>
-          <button
+          <Button
             onClick={handleRefresh}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2"
           >
             {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
+              <span>↻</span>
             )}
-            Refresh
-          </button>
+            <span>Refresh</span>
+          </Button>
         </div>
       </div>
 
@@ -179,7 +143,7 @@ export const OrdersPage = () => {
           <div className="flex items-center justify-between">
             <p className="text-red-600">Error: {error}</p>
             <button
-              onClick={() => dispatch(initializeWithMockData())}
+              onClick={() => dispatch(fetchOrders())}
               className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
             >
               Retry
@@ -192,20 +156,21 @@ export const OrdersPage = () => {
       <div className="mb-6">
         <SearchBar
           value={searchTerm}
-          onChange={setSearchTerm}
+          onChange={handleSearch}
           placeholder="Search by Order No, Customer Name, or Agent..."
-          onClear={() => setSearchTerm("")}
+          onClear={handleClearSearch}
         />
       </div>
 
       {/* Orders List */}
       <div className="space-y-4 mb-20">
-        {loading ? (
+        {isLoading ? (
+          <SkeletonLoader count={6} type="order" />
+        ) : !displayOrders ? (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading orders...</p>
+            <p className="text-gray-500">Orders data not available.</p>
           </div>
-        ) : filteredOrders.length === 0 ? (
+        ) : displayOrders.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">
               {searchTerm
@@ -214,13 +179,13 @@ export const OrdersPage = () => {
             </p>
           </div>
         ) : (
-          filteredOrders.map((order) => (
+          displayOrders.map((order) => (
             <ExpandableCard
-              key={order.OrderNo}
-              title={order.OrderNo}
-              subtitle={order.CustomerName}
-              price={order.totalAmount.toFixed(2)}
-              onEdit={() => handleEdit(order)}
+              key={order?.OrderNo || Math.random()}
+              title={order?.OrderNo || "Unknown"}
+              subtitle={order?.CustomerName || "Unknown"}
+              price={(order?.totalAmount || 0).toFixed(2)}
+              onEdit={() => handleEditOrder(order)}
               onDelete={() => handleDelete(order)}
             >
               <div className="space-y-2 text-sm">
@@ -228,12 +193,16 @@ export const OrdersPage = () => {
                   <div>
                     <span className="font-medium text-gray-700">Date:</span>
                     <p className="text-gray-600">
-                      {order.Date.toLocaleDateString()}
+                      {order?.Date
+                        ? typeof order.Date === "string"
+                          ? new Date(order.Date).toLocaleDateString()
+                          : order.Date.toLocaleDateString()
+                        : "N/A"}
                     </p>
                   </div>
                   <div>
                     <span className="font-medium text-gray-700">Agent:</span>
-                    <p className="text-gray-600">{order.Agent}</p>
+                    <p className="text-gray-600">{order?.Agent || "N/A"}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -241,24 +210,26 @@ export const OrdersPage = () => {
                     <span className="font-medium text-gray-700">
                       Transport:
                     </span>
-                    <p className="text-gray-600">{order.Transport}</p>
+                    <p className="text-gray-600">{order?.Transport || "N/A"}</p>
                   </div>
                   <div>
                     <span className="font-medium text-gray-700">
                       Payment Terms:
                     </span>
-                    <p className="text-gray-600">{order.PaymentTerms}</p>
+                    <p className="text-gray-600">
+                      {order?.PaymentTerms || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Address:</span>
-                  <p className="text-gray-600">{order.Address}</p>
+                  <p className="text-gray-600">{order?.Address || "N/A"}</p>
                 </div>
                 <div>
                   <span className="font-medium text-gray-700">Phone:</span>
-                  <p className="text-gray-600">{order.PhoneNo}</p>
+                  <p className="text-gray-600">{order?.PhoneNo || "N/A"}</p>
                 </div>
-                {order.Remark && (
+                {order?.Remark && (
                   <div>
                     <span className="font-medium text-gray-700">Remark:</span>
                     <p className="text-gray-600">{order.Remark}</p>
@@ -269,14 +240,15 @@ export const OrdersPage = () => {
                     Order Details:
                   </span>
                   <div className="mt-1 space-y-1">
-                    {order.OrderDetails.map((detail, index) => (
+                    {order?.OrderDetails?.map((detail, index) => (
                       <div
                         key={index}
                         className="pl-2 border-l-2 border-gray-200"
                       >
                         <p className="text-gray-600">
-                          {detail.DesignNo} - Qty: {detail.Quantity} - ₹
-                          {detail.UnitPrice} = ₹{detail.TotalPrice}
+                          {detail?.DesignNo || "N/A"} - Qty:{" "}
+                          {detail?.Quantity || 0} - ₹{detail?.UnitPrice || 0} =
+                          ₹{detail?.TotalPrice || 0}
                         </p>
                       </div>
                     ))}
@@ -290,12 +262,12 @@ export const OrdersPage = () => {
 
       {/* Floating Action Button */}
       <div className="fixed bottom-24 right-6 z-40">
-        <OrderFormDrawer
-          order={selectedOrder || undefined}
-          mode={selectedOrder ? "edit" : "create"}
-          onSubmit={handleSubmitOrder}
-          onClose={handleDrawerClose}
-        />
+        <Button
+          onClick={handleAddOrder}
+          className="w-14 h-14 rounded-full shadow-lg bg-pink-500 hover:bg-pink-600"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
       </div>
 
       {/* Delete Confirmation Dialog */}

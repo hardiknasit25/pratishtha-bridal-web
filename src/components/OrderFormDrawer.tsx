@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, CheckCircle, Loader2, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import type { IOrder, IOrderDetails } from "../types";
-import { mockProducts, type ProductDetails } from "../data/mockData";
+import { useAppSelector } from "../hooks/redux";
+import type { IOrderDetails, ProductDetails } from "../types";
+import { Button } from "./ui/button";
 import {
   Drawer,
   DrawerClose,
@@ -14,10 +16,8 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "./ui/drawer";
-import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
 import {
   Select,
   SelectContent,
@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { Plus, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { Textarea } from "./ui/textarea";
 
 // Enhanced Order schema with better validation
 const orderSchema = z.object({
@@ -101,36 +101,26 @@ const orderSchema = z.object({
 type OrderFormData = z.infer<typeof orderSchema>;
 
 interface OrderFormDrawerProps {
-  order?: IOrder; // For editing
-  mode?: "create" | "edit";
   onSubmit?: (data: OrderFormData) => void;
   onClose?: () => void; // Callback when drawer closes
 }
 
 export const OrderFormDrawer = ({
-  order,
-  mode = "create",
   onSubmit,
   onClose,
 }: OrderFormDrawerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [orderDetails, setOrderDetails] = useState<IOrderDetails[]>([
     { DesignNo: "", Quantity: 1, UnitPrice: 0, TotalPrice: 0 },
   ]);
   const [loading, setLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(false);
-
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [isFormValid, setIsFormValid] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset,
     setValue,
     watch,
-    trigger,
   } = useForm<OrderFormData>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
@@ -150,143 +140,62 @@ export const OrderFormDrawer = ({
     mode: "onChange", // Enable real-time validation
   });
 
-  // Watch form values for real-time validation
-  const watchedValues = watch();
-
-  // Validate form in real-time
-  useEffect(() => {
-    const validateForm = async () => {
-      try {
-        const isValidForm = await trigger();
-        setIsFormValid(isValidForm);
-
-        // Clear field errors when form becomes valid
-        if (isValidForm) {
-          setFieldErrors({});
-        }
-      } catch (error) {
-        console.error("Form validation error:", error);
-        setIsFormValid(false);
-      }
-    };
-
-    // Only validate if form is mounted and not loading
-    if (!loading) {
-      validateForm();
-    }
-  }, [watchedValues, trigger, loading]);
+  // Get products from Redux store
+  const { products } = useAppSelector((state) => state.products);
 
   // Get available products (excluding already selected ones)
   const getAvailableProducts = (currentIndex: number): ProductDetails[] => {
+    // Add safety check for products
+    if (!products || !Array.isArray(products)) {
+      console.warn("Products is not available or not an array:", products);
+      return [];
+    }
+
     const selectedDesignNos = orderDetails
       .map((detail, index) => (index !== currentIndex ? detail.DesignNo : ""))
       .filter((designNo) => designNo !== "");
 
-    return mockProducts.filter(
-      (product) => !selectedDesignNos.includes(product.DesignNo)
+    return products.filter(
+      (product: ProductDetails) => !selectedDesignNos.includes(product.DesignNo)
     );
   };
 
-  // Set form values when editing
+  // Reset form when component mounts
   useEffect(() => {
-    console.log("OrderFormDrawer useEffect triggered:", {
-      order: !!order,
-      mode,
-      orderDetails: order?.OrderDetails?.length,
-    });
-
-    if (order && mode === "edit") {
-      try {
-        setIsInitializing(true);
-
-        // Convert Date object to string for date input
-        const orderDate =
-          order.Date instanceof Date
-            ? order.Date.toISOString().split("T")[0]
-            : new Date().toISOString().split("T")[0];
-
-        // Set form values
-        setValue("Date", orderDate);
-        setValue("CustomerName", order.CustomerName || "");
-        setValue("Address", order.Address || "");
-        setValue("PhoneNo", order.PhoneNo || "");
-        setValue("Agent", order.Agent || "");
-        setValue("Transport", order.Transport || "");
-        setValue("PaymentTerms", order.PaymentTerms || "");
-        setValue("Remark", order.Remark || "");
-        setValue("totalAmount", order.totalAmount || 0);
-
-        if (order.OrderDetails && order.OrderDetails.length > 0) {
-          setOrderDetails(order.OrderDetails);
-          setValue("OrderDetails", order.OrderDetails);
-        }
-
-        // Automatically open drawer when editing
-        // Add a small delay to ensure form is properly initialized
-        setTimeout(() => {
-          setIsOpen(true);
-          setIsInitializing(false);
-        }, 100);
-
-        // Safety timeout to prevent hanging
-        const safetyTimeout = setTimeout(() => {
-          if (isInitializing) {
-            console.warn(
-              "Form initialization taking too long, forcing completion"
-            );
-            setIsInitializing(false);
-            setIsOpen(true);
-          }
-        }, 2000);
-
-        // Cleanup function
-        return () => {
-          clearTimeout(safetyTimeout);
-        };
-      } catch (error) {
-        console.error("Error setting form values for editing:", error);
-        // Don't open drawer if there's an error
-        setIsOpen(false);
-        setIsInitializing(false);
-      }
-    } else if (!order && mode === "create") {
-      // Reset form when switching to create mode
-      reset();
-      setOrderDetails([
-        { DesignNo: "", Quantity: 1, UnitPrice: 0, TotalPrice: 0 },
-      ]);
-      setFieldErrors({});
-    }
-  }, [order, mode, setValue, reset]);
+    reset();
+    setOrderDetails([
+      { DesignNo: "", Quantity: 1, UnitPrice: 0, TotalPrice: 0 },
+    ]);
+  }, [reset]);
 
   const addOrderDetail = () => {
-    if (orderDetails.length >= 50) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        orderDetails: "Cannot add more than 50 items",
-      }));
-      return;
-    }
+    try {
+      if (orderDetails.length >= 50) {
+        return;
+      }
 
-    const newDetail = {
-      DesignNo: "",
-      Quantity: 1,
-      UnitPrice: 0,
-      TotalPrice: 0,
-    };
-    setOrderDetails([...orderDetails, newDetail]);
-    setFieldErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.orderDetails;
-      return newErrors;
-    });
+      const newDetail = {
+        DesignNo: "",
+        Quantity: 1,
+        UnitPrice: 0,
+        TotalPrice: 0,
+      };
+
+      setOrderDetails((prev) => [...prev, newDetail]);
+    } catch (error) {
+      console.error("Error adding order detail:", error);
+    }
   };
 
   const removeOrderDetail = (index: number) => {
-    if (orderDetails.length > 1) {
-      const newDetails = orderDetails.filter((_, i) => i !== index);
-      setOrderDetails(newDetails);
-      setValue("OrderDetails", newDetails);
+    try {
+      if (orderDetails.length > 1) {
+        const newDetails = orderDetails.filter((_, i) => i !== index);
+        setOrderDetails(newDetails);
+        setValue("OrderDetails", newDetails);
+      }
+    } catch (error) {
+      console.error("Error removing order detail:", error);
     }
   };
 
@@ -295,117 +204,48 @@ export const OrderFormDrawer = ({
     field: keyof IOrderDetails,
     value: string | number
   ) => {
-    const newDetails = [...orderDetails];
-    newDetails[index] = { ...newDetails[index], [field]: value };
+    try {
+      const newDetails = [...orderDetails];
+      newDetails[index] = { ...newDetails[index], [field]: value };
 
-    // Calculate total price for this detail
-    if (field === "Quantity" || field === "UnitPrice") {
-      const quantity =
-        field === "Quantity" ? Number(value) : newDetails[index].Quantity;
-      const unitPrice =
-        field === "UnitPrice" ? Number(value) : newDetails[index].UnitPrice;
-      newDetails[index].TotalPrice = quantity * unitPrice;
-    }
-
-    // If DesignNo is selected, auto-fill the UnitPrice
-    if (field === "DesignNo") {
-      const selectedProduct = mockProducts.find((p) => p.DesignNo === value);
-      if (selectedProduct) {
-        newDetails[index].UnitPrice = selectedProduct.Rate;
-        newDetails[index].TotalPrice =
-          newDetails[index].Quantity * selectedProduct.Rate;
+      // Calculate total price for this detail
+      if (field === "Quantity" || field === "UnitPrice") {
+        const quantity =
+          field === "Quantity" ? Number(value) : newDetails[index].Quantity;
+        const unitPrice =
+          field === "UnitPrice" ? Number(value) : newDetails[index].UnitPrice;
+        newDetails[index].TotalPrice = quantity * unitPrice;
       }
-    }
 
-    setOrderDetails(newDetails);
-    setValue("OrderDetails", newDetails);
-
-    // Calculate total amount
-    const totalAmount = newDetails.reduce(
-      (sum, detail) => sum + detail.TotalPrice,
-      0
-    );
-    setValue("totalAmount", totalAmount);
-  };
-
-  // Enhanced input validation
-  const validateInput = (field: string, value: string | number) => {
-    let error = "";
-
-    switch (field) {
-      case "CustomerName":
-        if (!value || String(value).trim().length === 0) {
-          error = "Customer name is required";
-        } else if (String(value).length < 2) {
-          error = "Customer name must be at least 2 characters";
-        } else if (!/^[a-zA-Z\s]+$/.test(String(value))) {
-          error = "Customer name can only contain letters and spaces";
+      // If DesignNo is selected, auto-fill the UnitPrice
+      if (field === "DesignNo") {
+        const selectedProduct = products?.find(
+          (p: ProductDetails) => p.DesignNo === value
+        );
+        if (selectedProduct) {
+          newDetails[index].UnitPrice = selectedProduct.Rate;
+          newDetails[index].TotalPrice =
+            newDetails[index].Quantity * selectedProduct.Rate;
         }
-        break;
-      case "PhoneNo":
-        if (!value || String(value).trim().length === 0) {
-          error = "Phone number is required";
-        } else if (!/^[0-9+\-\s()]+$/.test(String(value))) {
-          error = "Phone number can only contain numbers, spaces, and symbols";
-        } else if (String(value).replace(/[^0-9]/g, "").length < 10) {
-          error = "Phone number must be at least 10 digits";
-        }
-        break;
-      case "Address":
-        if (!value || String(value).trim().length === 0) {
-          error = "Address is required";
-        } else if (String(value).length < 10) {
-          error = "Address must be at least 10 characters";
-        }
-        break;
-      case "Quantity": {
-        const numValue = Number(value);
-        if (isNaN(numValue) || numValue < 1) {
-          error = "Quantity must be at least 1";
-        } else if (numValue > 999) {
-          error = "Quantity cannot exceed 999";
-        }
-        break;
       }
-      case "UnitPrice": {
-        const priceValue = Number(value);
-        if (isNaN(priceValue) || priceValue < 0) {
-          error = "Unit price must be positive";
-        } else if (priceValue > 999999) {
-          error = "Unit price cannot exceed ₹999,999";
-        }
-        break;
-      }
-    }
 
-    return error;
-  };
+      setOrderDetails(newDetails);
+      setValue("OrderDetails", newDetails);
 
-  // Handle input change with validation
-  const handleInputChange = (field: string, value: string | number) => {
-    const error = validateInput(field, value);
-
-    if (error) {
-      setFieldErrors((prev) => ({ ...prev, [field]: error }));
-    } else {
-      setFieldErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+      // Calculate total amount
+      const totalAmount = newDetails.reduce(
+        (sum, detail) => sum + detail.TotalPrice,
+        0
+      );
+      setValue("totalAmount", totalAmount);
+    } catch (error) {
+      console.error("Error updating order detail:", error);
     }
   };
 
   const onSubmitForm = async (data: OrderFormData) => {
     try {
       setLoading(true);
-
-      // Final validation before submission
-      const isValidForm = await trigger();
-      if (!isValidForm) {
-        setLoading(false);
-        return;
-      }
 
       const orderData = {
         ...data,
@@ -424,50 +264,20 @@ export const OrderFormDrawer = ({
       setOrderDetails([
         { DesignNo: "", Quantity: 1, UnitPrice: 0, TotalPrice: 0 },
       ]);
-      setFieldErrors({});
-      setIsOpen(false);
     } catch (error) {
       console.error("Error submitting order:", error);
-      setFieldErrors((prev) => ({
-        ...prev,
-        submit: "Failed to submit order. Please try again.",
-      }));
     } finally {
       setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setIsOpen(false);
     reset();
     setOrderDetails([
       { DesignNo: "", Quantity: 1, UnitPrice: 0, TotalPrice: 0 },
     ]);
-    setFieldErrors({});
     if (onClose) {
       onClose();
-    }
-  };
-
-  // Handle drawer open/close state
-  const handleOpenChange = (open: boolean) => {
-    try {
-      setIsOpen(open);
-      if (!open) {
-        reset();
-        setFieldErrors({});
-        if (onClose) {
-          onClose();
-        }
-      }
-    } catch (error) {
-      console.error("Error handling drawer state change:", error);
-      // Fallback: force close the drawer
-      setIsOpen(false);
-      setFieldErrors({});
-      if (onClose) {
-        onClose();
-      }
     }
   };
 
@@ -482,262 +292,210 @@ export const OrderFormDrawer = ({
   };
 
   return (
-    <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+    <Drawer>
       <DrawerTrigger asChild>
-        <Button className="w-14 h-14 rounded-full shadow-lg bg-pink-500 hover:bg-pink-600">
+        <Button
+          className="w-14 h-14 rounded-full shadow-lg bg-pink-500 hover:bg-pink-600"
+          onClick={() => console.log("Drawer trigger clicked")}
+        >
           <Plus className="w-6 h-6" />
         </Button>
       </DrawerTrigger>
       <DrawerContent className="overflow-hidden transition-all duration-300 max-h-[85vh] sm:max-h-[80vh]">
         <DrawerHeader className="flex-shrink-0">
-          <DrawerTitle>
-            {mode === "edit" ? "Edit Order" : "Add New Order"}
-          </DrawerTitle>
+          <DrawerTitle>Add New Order</DrawerTitle>
           <DrawerDescription>
-            {mode === "edit"
-              ? "Update the order details below."
-              : "Fill in the details to create a new customer order."}
+            Fill in the details to create a new customer order.
           </DrawerDescription>
         </DrawerHeader>
 
         <div className="flex-1 overflow-y-auto px-4">
-          {isInitializing ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mr-3"></div>
-              <p className="text-gray-600">Loading order details...</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
-              {/* Customer Name */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="CustomerName"
-                  className="flex items-center gap-2"
-                >
-                  Customer Name *
-                  {errors.CustomerName && (
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                  )}
-                  {!errors.CustomerName && watchedValues.CustomerName && (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  )}
-                </Label>
-                <Input
-                  id="CustomerName"
-                  {...register("CustomerName")}
-                  placeholder="Enter customer name"
-                  onBlur={(e) => {
-                    handleInputChange("CustomerName", e.target.value);
-                  }}
-                  className={
-                    errors.CustomerName
-                      ? "border-red-500 focus:border-red-500"
-                      : ""
-                  }
-                />
+          <form
+            onSubmit={handleSubmit(onSubmitForm)}
+            className="space-y-4 pb-4"
+          >
+            {/* Customer Name */}
+            <div className="space-y-2">
+              <Label htmlFor="CustomerName" className="flex items-center gap-2">
+                Customer Name *
                 {errors.CustomerName && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.CustomerName.message}
-                  </p>
+                  <AlertCircle className="w-4 h-4 text-red-500" />
                 )}
-              </div>
-
-              {/* Date */}
-              <div className="space-y-2">
-                <Label htmlFor="Date">Date *</Label>
-                <Input
-                  id="Date"
-                  type="date"
-                  {...register("Date")}
-                  className={
-                    errors.Date ? "border-red-500 focus:border-red-500" : ""
-                  }
-                />
-                {errors.Date && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.Date.message}
-                  </p>
+                {!errors.CustomerName && watch("CustomerName") && (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
                 )}
-              </div>
+              </Label>
+              <Input
+                id="CustomerName"
+                {...register("CustomerName")}
+                placeholder="Enter customer name"
+                className={errors.CustomerName ? "border-red-500" : ""}
+              />
+              {errors.CustomerName && (
+                <p className="text-sm text-destructive">
+                  {errors.CustomerName.message}
+                </p>
+              )}
+            </div>
 
-              {/* Address */}
-              <div className="space-y-2">
-                <Label htmlFor="Address" className="flex items-center gap-2">
-                  Address *
-                  {errors.Address && (
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                  )}
-                  {!errors.Address && watchedValues.Address && (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  )}
-                </Label>
-                <Textarea
-                  id="Address"
-                  {...register("Address")}
-                  placeholder="Enter customer address"
-                  rows={3}
-                  onBlur={(e) => {
-                    handleInputChange("Address", e.target.value);
-                  }}
-                  className={
-                    errors.Address ? "border-red-500 focus:border-red-500" : ""
-                  }
-                />
+            {/* Date */}
+            <div className="space-y-2">
+              <Label htmlFor="Date">Date *</Label>
+              <Input
+                id="Date"
+                type="date"
+                {...register("Date")}
+                className={errors.Date ? "border-red-500" : ""}
+              />
+              {errors.Date && (
+                <p className="text-sm text-destructive">
+                  {errors.Date.message}
+                </p>
+              )}
+            </div>
+
+            {/* Address */}
+            <div className="space-y-2">
+              <Label htmlFor="Address" className="flex items-center gap-2">
+                Address *
                 {errors.Address && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.Address.message}
-                  </p>
+                  <AlertCircle className="w-4 h-4 text-red-500" />
                 )}
-              </div>
+                {!errors.Address && watch("Address") && (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                )}
+              </Label>
+              <Textarea
+                id="Address"
+                {...register("Address")}
+                placeholder="Enter customer address"
+                rows={3}
+                className={errors.Address ? "border-red-500" : ""}
+              />
+              {errors.Address && (
+                <p className="text-sm text-destructive">
+                  {errors.Address.message}
+                </p>
+              )}
+            </div>
 
-              {/* Phone Number */}
-              <div className="space-y-2">
-                <Label htmlFor="PhoneNo" className="flex items-center gap-2">
-                  Phone Number *
-                  {errors.PhoneNo && (
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                  )}
-                  {!errors.PhoneNo && watchedValues.PhoneNo && (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  )}
-                </Label>
-                <Input
-                  id="PhoneNo"
-                  type="tel"
-                  {...register("PhoneNo")}
-                  placeholder="Enter phone number (e.g., +91 98765 43210)"
-                  onBlur={(e) => {
-                    handleInputChange("PhoneNo", e.target.value);
-                  }}
-                  onKeyPress={(e) => {
-                    // Allow only numbers, spaces, +, -, (, )
-                    const allowedChars = /[0-9+\-\s()]/;
-                    if (!allowedChars.test(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className={
-                    errors.PhoneNo ? "border-red-500 focus:border-red-500" : ""
-                  }
-                />
+            {/* Phone Number */}
+            <div className="space-y-2">
+              <Label htmlFor="PhoneNo" className="flex items-center gap-2">
+                Phone Number *
                 {errors.PhoneNo && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.PhoneNo.message}
-                  </p>
+                  <AlertCircle className="w-4 h-4 text-red-500" />
                 )}
-              </div>
-
-              {/* Agent */}
-              <div className="space-y-2">
-                <Label htmlFor="Agent">Agent *</Label>
-                <Input
-                  id="Agent"
-                  {...register("Agent")}
-                  placeholder="Enter agent name"
-                  className={
-                    errors.Agent ? "border-red-500 focus:border-red-500" : ""
+                {!errors.PhoneNo && watch("PhoneNo") && (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                )}
+              </Label>
+              <Input
+                id="PhoneNo"
+                type="tel"
+                {...register("PhoneNo")}
+                placeholder="Enter phone number (e.g., +91 98765 43210)"
+                onKeyPress={(e) => {
+                  // Allow only numbers, spaces, +, -, (, )
+                  const allowedChars = /[0-9+\-\s()]/;
+                  if (!allowedChars.test(e.key)) {
+                    e.preventDefault();
                   }
-                />
-                {errors.Agent && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.Agent.message}
-                  </p>
-                )}
+                }}
+                className={errors.PhoneNo ? "border-red-500" : ""}
+              />
+              {errors.PhoneNo && (
+                <p className="text-sm text-destructive">
+                  {errors.PhoneNo.message}
+                </p>
+              )}
+            </div>
+
+            {/* Agent */}
+            <div className="space-y-2">
+              <Label htmlFor="Agent">Agent *</Label>
+              <Input
+                id="Agent"
+                {...register("Agent")}
+                placeholder="Enter agent name"
+                className={errors.Agent ? "border-red-500" : ""}
+              />
+              {errors.Agent && (
+                <p className="text-sm text-destructive">
+                  {errors.Agent.message}
+                </p>
+              )}
+            </div>
+
+            {/* Transport */}
+            <div className="space-y-2">
+              <Label htmlFor="Transport">Transport *</Label>
+              <Input
+                id="Transport"
+                {...register("Transport")}
+                placeholder="e.g., Express Delivery"
+                className={errors.Transport ? "border-red-500" : ""}
+              />
+              {errors.Transport && (
+                <p className="text-sm text-destructive">
+                  {errors.Transport.message}
+                </p>
+              )}
+            </div>
+
+            {/* Payment Terms */}
+            <div className="space-y-2">
+              <Label htmlFor="PaymentTerms">Payment Terms *</Label>
+              <Input
+                id="PaymentTerms"
+                {...register("PaymentTerms")}
+                placeholder="e.g., 50% Advance"
+                className={errors.PaymentTerms ? "border-red-500" : ""}
+              />
+              {errors.PaymentTerms && (
+                <p className="text-sm text-destructive">
+                  {errors.PaymentTerms.message}
+                </p>
+              )}
+            </div>
+
+            {/* Remark */}
+            <div className="space-y-2">
+              <Label htmlFor="Remark">Remark</Label>
+              <Textarea
+                id="Remark"
+                {...register("Remark")}
+                placeholder="Additional notes..."
+                rows={3}
+                className={errors.Remark ? "border-red-500" : ""}
+              />
+              {errors.Remark && (
+                <p className="text-sm text-destructive">
+                  {errors.Remark.message}
+                </p>
+              )}
+            </div>
+
+            {/* Order Details */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Label>Order Details *</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addOrderDetail}
+                  disabled={orderDetails.length >= 50}
+                >
+                  Add Item
+                </Button>
               </div>
 
-              {/* Transport */}
-              <div className="space-y-2">
-                <Label htmlFor="Transport">Transport *</Label>
-                <Input
-                  id="Transport"
-                  {...register("Transport")}
-                  placeholder="e.g., Express Delivery"
-                  className={
-                    errors.Transport
-                      ? "border-red-500 focus:border-red-500"
-                      : ""
-                  }
-                />
-                {errors.Transport && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.Transport.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Payment Terms */}
-              <div className="space-y-2">
-                <Label htmlFor="PaymentTerms">Payment Terms *</Label>
-                <Input
-                  id="PaymentTerms"
-                  {...register("PaymentTerms")}
-                  placeholder="e.g., 50% Advance"
-                  className={
-                    errors.PaymentTerms
-                      ? "border-red-500 focus:border-red-500"
-                      : ""
-                  }
-                />
-                {errors.PaymentTerms && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.PaymentTerms.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Remark */}
-              <div className="space-y-2">
-                <Label htmlFor="Remark">Remark</Label>
-                <Textarea
-                  id="Remark"
-                  {...register("Remark")}
-                  placeholder="Additional notes..."
-                  rows={3}
-                  className={
-                    errors.Remark ? "border-red-500 focus:border-red-500" : ""
-                  }
-                />
-                {errors.Remark && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.Remark.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Order Details */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <Label>Order Details *</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addOrderDetail}
-                    disabled={orderDetails.length >= 50}
-                  >
-                    Add Item
-                  </Button>
-                </div>
-
-                {fieldErrors.orderDetails && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {fieldErrors.orderDetails}
-                  </p>
-                )}
-
-                {orderDetails.map((detail, index) => {
+              {Array.isArray(orderDetails) &&
+                orderDetails.map((detail, index) => {
                   const availableProducts = getAvailableProducts(index);
-                  const selectedProduct = mockProducts.find(
-                    (p) => p.DesignNo === detail.DesignNo
+                  const selectedProduct = products?.find(
+                    (p: ProductDetails) => p.DesignNo === detail.DesignNo
                   );
 
                   return (
@@ -760,11 +518,11 @@ export const OrderFormDrawer = ({
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                         <div>
                           <Label>Design No *</Label>
                           <Select
-                            value={detail.DesignNo}
+                            value={detail.DesignNo || undefined}
                             onValueChange={(value) =>
                               updateOrderDetail(index, "DesignNo", value)
                             }
@@ -784,7 +542,7 @@ export const OrderFormDrawer = ({
                                   </SelectItem>
                                 ))
                               ) : (
-                                <SelectItem value="" disabled>
+                                <SelectItem value="no-products" disabled>
                                   No products available
                                 </SelectItem>
                               )}
@@ -802,37 +560,10 @@ export const OrderFormDrawer = ({
                               const value = Number(e.target.value);
                               if (value >= 0) {
                                 updateOrderDetail(index, "Quantity", value);
-                                handleInputChange("Quantity", value);
-                              }
-                            }}
-                            onBlur={(e) =>
-                              handleInputChange(
-                                "Quantity",
-                                Number(e.target.value)
-                              )
-                            }
-                            onKeyPress={(e) => {
-                              // Allow only numbers and backspace
-                              const allowedChars = /[0-9]/;
-                              if (
-                                !allowedChars.test(e.key) &&
-                                e.key !== "Backspace"
-                              ) {
-                                e.preventDefault();
                               }
                             }}
                             placeholder="1"
-                            className={
-                              fieldErrors.Quantity
-                                ? "border-red-500 focus:border-red-500"
-                                : ""
-                            }
                           />
-                          {fieldErrors.Quantity && (
-                            <p className="text-xs text-red-500 mt-1">
-                              {fieldErrors.Quantity}
-                            </p>
-                          )}
                         </div>
                         <div>
                           <Label>Unit Price (₹) *</Label>
@@ -846,15 +577,8 @@ export const OrderFormDrawer = ({
                               const value = Number(e.target.value);
                               if (value >= 0) {
                                 updateOrderDetail(index, "UnitPrice", value);
-                                handleInputChange("UnitPrice", value);
                               }
                             }}
-                            onBlur={(e) =>
-                              handleInputChange(
-                                "UnitPrice",
-                                Number(e.target.value)
-                              )
-                            }
                             onKeyPress={(e) => {
                               // Allow only numbers, decimal point, and backspace
                               const allowedChars = /[0-9.]/;
@@ -873,17 +597,7 @@ export const OrderFormDrawer = ({
                               }
                             }}
                             placeholder="0.00"
-                            className={
-                              fieldErrors.UnitPrice
-                                ? "border-red-500 focus:border-red-500"
-                                : ""
-                            }
                           />
-                          {fieldErrors.UnitPrice && (
-                            <p className="text-xs text-red-500 mt-1">
-                              {fieldErrors.UnitPrice}
-                            </p>
-                          )}
                         </div>
                         <div>
                           <Label>Total Price (₹)</Label>
@@ -913,42 +627,30 @@ export const OrderFormDrawer = ({
                     </div>
                   );
                 })}
-              </div>
+            </div>
 
-              {/* Total Amount */}
-              <div className="space-y-2">
-                <Label htmlFor="totalAmount">Total Amount (₹) *</Label>
-                <Input
-                  id="totalAmount"
-                  type="text"
-                  value={formatCurrency(
-                    orderDetails.reduce(
-                      (sum, detail) => sum + detail.TotalPrice,
-                      0
-                    )
-                  )}
-                  readOnly
-                  className="bg-gray-50 font-semibold text-lg"
-                />
-                {errors.totalAmount && (
-                  <p className="text-sm text-red-500 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.totalAmount.message}
-                  </p>
+            {/* Total Amount */}
+            <div className="space-y-2">
+              <Label htmlFor="totalAmount">Total Amount (₹) *</Label>
+              <Input
+                id="totalAmount"
+                type="text"
+                value={formatCurrency(
+                  orderDetails.reduce(
+                    (sum, detail) => sum + detail.TotalPrice,
+                    0
+                  )
                 )}
-              </div>
-
-              {/* Submit Error */}
-              {fieldErrors.submit && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-600 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    {fieldErrors.submit}
-                  </p>
-                </div>
+                readOnly
+                className="bg-gray-50 font-semibold text-lg"
+              />
+              {errors.totalAmount && (
+                <p className="text-sm text-destructive">
+                  {errors.totalAmount.message}
+                </p>
               )}
-            </form>
-          )}
+            </div>
+          </form>
         </div>
 
         <DrawerFooter className="flex-shrink-0 border-t bg-white">
@@ -964,16 +666,14 @@ export const OrderFormDrawer = ({
             </DrawerClose>
             <Button
               onClick={handleSubmit(onSubmitForm)}
-              disabled={loading || !isFormValid}
+              disabled={loading || !isValid}
               className="flex-1"
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {mode === "edit" ? "Updating..." : "Creating..."}
+                  Creating...
                 </>
-              ) : mode === "edit" ? (
-                "Update Order"
               ) : (
                 "Create Order"
               )}

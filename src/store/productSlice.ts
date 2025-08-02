@@ -4,7 +4,7 @@ import type { AddProduct, ProductDetails } from "../types";
 import api from "../services/api";
 import { API_ENDPOINTS } from "../services/apiEndpoints";
 
-// Async thunks for API calls using axios
+// Async thunks for API operations
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (_, { rejectWithValue }) => {
@@ -15,25 +15,6 @@ export const fetchProducts = createAsyncThunk(
       return response.data;
     } catch (error) {
       console.error("Redux: API call failed:", error);
-      console.error("Redux: Error details:", {
-        message: error instanceof Error ? error.message : "Unknown error",
-        name: error instanceof Error ? error.name : "Unknown",
-        status: (
-          error as {
-            response?: { status?: number; statusText?: string; data?: unknown };
-          }
-        )?.response?.status,
-        statusText: (
-          error as {
-            response?: { status?: number; statusText?: string; data?: unknown };
-          }
-        )?.response?.statusText,
-        data: (
-          error as {
-            response?: { status?: number; statusText?: string; data?: unknown };
-          }
-        )?.response?.data,
-      });
       const errorMessage =
         error instanceof Error ? error.message : "Failed to fetch products";
       return rejectWithValue(errorMessage);
@@ -89,18 +70,43 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
+// Add search products async thunk
+export const searchProducts = createAsyncThunk(
+  "products/searchProducts",
+  async (query: string, { rejectWithValue }) => {
+    try {
+      console.log("Redux: Starting searchProducts API call with query:", query);
+      const params = new URLSearchParams({ query });
+      const response = await api.get(
+        `${API_ENDPOINTS.SEARCH_PRODUCTS}?${params}`
+      );
+      console.log("Redux: Search API call successful:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Redux: Search API call failed:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to search products";
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 interface ProductState {
   products: ProductDetails[];
+  searchResults: ProductDetails[];
   loading: boolean;
   error: string | null;
   selectedProduct: ProductDetails | null;
+  isSearching: boolean;
 }
 
 const initialState: ProductState = {
   products: [],
+  searchResults: [],
   loading: false,
   error: null,
   selectedProduct: null,
+  isSearching: false,
 };
 
 const productSlice = createSlice({
@@ -193,6 +199,19 @@ const productSlice = createSlice({
       })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Search products
+      .addCase(searchProducts.pending, (state) => {
+        state.isSearching = true;
+        state.error = null;
+      })
+      .addCase(searchProducts.fulfilled, (state, action) => {
+        state.isSearching = false;
+        state.searchResults = action.payload;
+      })
+      .addCase(searchProducts.rejected, (state, action) => {
+        state.isSearching = false;
         state.error = action.payload as string;
       });
   },

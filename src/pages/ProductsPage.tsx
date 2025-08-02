@@ -1,26 +1,26 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ExpandableCard } from "../components/ExpandableCard";
-import { ProductFormDrawer } from "../components/ProductFormDrawer";
 import { SearchBar } from "../components/SearchBar";
 import { SkeletonLoader } from "../components/SkeletonLoader";
 import { Button } from "../components/ui/button";
-import { Loader2 } from "lucide-react";
-import type { AddProduct, ProductDetails } from "../types";
+import { Loader2, Plus } from "lucide-react";
+import type { ProductDetails } from "../types";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 import {
   fetchProducts,
   deleteProduct,
-  createProduct,
-  updateProduct,
+  searchProducts,
 } from "../store/productSlice";
 import { showToast } from "../components/Toast";
 
 export const ProductsPage = () => {
+  const navigate = useNavigate();
+
   // Redux state
-  const { products, loading, error } = useAppSelector(
-    (state) => state.products
-  );
+  const { products, searchResults, loading, error, isSearching } =
+    useAppSelector((state) => state.products);
 
   // Add error boundary for component
   if (error && !loading) {
@@ -28,10 +28,8 @@ export const ProductsPage = () => {
   }
 
   // Local state for UI
-  const [selectedProduct, setSelectedProduct] = useState<ProductDetails | null>(
-    null
-  );
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchActive, setIsSearchActive] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     product: ProductDetails | null;
@@ -42,17 +40,30 @@ export const ProductsPage = () => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  const filteredProducts = (products || []).filter(
-    (product) =>
-      product?.DesignNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product?.TypeOfGarment?.toLowerCase().includes(
-        searchTerm.toLowerCase()
-      ) ||
-      product?.ColorOfGarment?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Handle search with API call
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+
+    if (value.trim()) {
+      setIsSearchActive(true);
+      dispatch(searchProducts(value.trim()));
+    } else {
+      setIsSearchActive(false);
+    }
+  };
+
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setIsSearchActive(false);
+  };
+
+  // Use search results if searching, otherwise use all products
+  const displayProducts = isSearchActive ? searchResults : products;
+  const isLoading = isSearchActive ? isSearching : loading;
 
   const handleEdit = (product: ProductDetails) => {
-    setSelectedProduct(product);
+    navigate(`/products/edit/${product._id}`);
   };
 
   const handleDelete = (product: ProductDetails) => {
@@ -79,50 +90,8 @@ export const ProductsPage = () => {
     }
   };
 
-  const handleSubmitProduct = async (
-    data: Omit<ProductDetails, "DesignNo" | "_id">
-  ) => {
-    try {
-      if (selectedProduct) {
-        // Update existing product - preserve DesignNo and id
-        const updatedProduct: ProductDetails = {
-          ...data,
-          _id: selectedProduct._id,
-          DesignNo: selectedProduct.DesignNo,
-        };
-        await dispatch(updateProduct(updatedProduct)).unwrap();
-        // Show success message
-        showToast.success(
-          "Product Updated",
-          `${selectedProduct.DesignNo} has been successfully updated.`
-        );
-      } else {
-        // Add new product - generate temporary DesignNo and id for demo
-        const newProduct: AddProduct = {
-          ...data,
-        };
-        console.log("Submitting new product:", newProduct);
-        const result = await dispatch(createProduct(newProduct)).unwrap();
-        console.log("Product creation result:", result);
-        // Show success message
-        showToast.success(
-          "Product Created",
-          `${data.TypeOfGarment} has been successfully added to your catalog.`
-        );
-      }
-      // Clear selected product after successful submission
-      setSelectedProduct(null);
-    } catch (err) {
-      console.error("Error saving product:", err);
-      showToast.error(
-        "Operation Failed",
-        "Unable to save the product. Please try again."
-      );
-    }
-  };
-
-  const handleDrawerClose = () => {
-    setSelectedProduct(null);
+  const handleAddProduct = () => {
+    navigate("/products/add");
   };
 
   return (
@@ -169,17 +138,17 @@ export const ProductsPage = () => {
       <div className="mb-6">
         <SearchBar
           value={searchTerm}
-          onChange={setSearchTerm}
+          onChange={handleSearch}
           placeholder="Search by Design No, Type, or Color..."
-          onClear={() => setSearchTerm("")}
+          onClear={handleClearSearch}
         />
       </div>
 
       {/* Products List */}
       <div className="space-y-4 mb-20">
-        {loading ? (
+        {isLoading ? (
           <SkeletonLoader count={6} type="product" />
-        ) : filteredProducts.length === 0 ? (
+        ) : displayProducts.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">
               {searchTerm
@@ -188,7 +157,7 @@ export const ProductsPage = () => {
             </p>
           </div>
         ) : (
-          filteredProducts.map((product) => (
+          displayProducts.map((product) => (
             <ExpandableCard
               key={product?._id || product?.DesignNo || Math.random()}
               title={product?.DesignNo || "Unknown"}
@@ -238,12 +207,12 @@ export const ProductsPage = () => {
 
       {/* Floating Action Button */}
       <div className="fixed bottom-24 right-6 z-40">
-        <ProductFormDrawer
-          product={selectedProduct || undefined}
-          mode={selectedProduct ? "edit" : "create"}
-          onSubmit={handleSubmitProduct}
-          onClose={handleDrawerClose}
-        />
+        <Button
+          onClick={handleAddProduct}
+          className="w-14 h-14 rounded-full shadow-lg bg-pink-500 hover:bg-pink-600"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
       </div>
 
       {/* Delete Confirmation Dialog */}

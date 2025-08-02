@@ -11,100 +11,22 @@ export const SkeletonLoader = ({
 }: SkeletonLoaderProps) => {
   const skeletons = Array.from({ length: count }, (_, index) => (
     <div key={index} className="animate-pulse">
-      {type === "product" && (
-        <div className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
-          {/* Header */}
-          <div className="flex justify-between items-start">
-            <div className="space-y-2 flex-1">
-              <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-            <div className="flex space-x-2">
-              <div className="h-8 w-8 bg-gray-200 rounded"></div>
-              <div className="h-8 w-8 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-
-          {/* Price */}
-          <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {type === "order" && (
-        <div className="bg-white rounded-lg shadow-sm border p-4 space-y-4">
-          {/* Header */}
-          <div className="flex justify-between items-start">
-            <div className="space-y-2 flex-1">
-              <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-            <div className="flex space-x-2">
-              <div className="h-8 w-8 bg-gray-200 rounded"></div>
-              <div className="h-8 w-8 bg-gray-200 rounded"></div>
-            </div>
-          </div>
-
-          {/* Price */}
-          <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-            </div>
-          </div>
-
-          {/* Address */}
-          <div className="space-y-2">
-            <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-full"></div>
-          </div>
-
-          {/* Order Details */}
-          <div className="space-y-2">
-            <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-            <div className="space-y-1">
-              <div className="h-3 bg-gray-200 rounded w-full"></div>
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {type === "card" && (
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      <div className="w-full bg-white shadow-sm border border-gray-100 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            {/* Title skeleton */}
+            <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
+            {/* Subtitle skeleton */}
             <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Price skeleton */}
+            <div className="h-6 bg-gray-200 rounded w-16"></div>
+            {/* Chevron icon skeleton */}
+            <div className="h-5 w-5 bg-gray-200 rounded"></div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   ));
 

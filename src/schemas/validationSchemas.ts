@@ -1,5 +1,74 @@
 import { z } from "zod";
 
+// TEMPORARY: Simplified validation for testing
+export const userSignupSchema = z
+  .object({
+    UserName: z.string().min(1, "Username is required"),
+    Password: z.string().min(1, "Password is required"),
+    confirmPassword: z.string().min(1, "Password confirmation is required"),
+  })
+  .refine((data) => data.Password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+export const userLoginSchema = z.object({
+  UserName: z.string().min(1, "Username is required"),
+  Password: z.string().min(1, "Password is required"),
+});
+
+export const forgotPasswordSchema = z.object({
+  UserName: z.string().min(1, "Username is required"),
+});
+
+export const resetPasswordSchema = z.object({
+  UserName: z.string().min(1, "Username is required"),
+  Password: z.string().min(1, "Password is required"),
+});
+
+// ORIGINAL STRICT VALIDATION (COMMENTED OUT FOR TESTING)
+/*
+export const userSignupSchema = z.object({
+  UserName: z
+    .string()
+    .min(3, "Username must be at least 3 characters long")
+    .max(50, "Username cannot exceed 50 characters"),
+  Password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .max(100, "Password cannot exceed 100 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+    ),
+  confirmPassword: z.string(),
+}).refine((data) => data.Password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+export const userLoginSchema = z.object({
+  UserName: z.string().min(1, "Username is required"),
+  Password: z.string().min(1, "Password is required"),
+});
+
+export const forgotPasswordSchema = z.object({
+  UserName: z.string().min(1, "Username is required"),
+});
+
+export const resetPasswordSchema = z.object({
+  UserName: z.string().min(1, "Username is required"),
+  Password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .max(100, "Password cannot exceed 100 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+    ),
+});
+*/
+
 // Product Schema
 export const productSchema = z.object({
   designNo: z.string().min(1, "Design number is required"),

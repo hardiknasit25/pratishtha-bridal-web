@@ -46,3 +46,16 @@ export interface IOrder {
   OrderDetails: IOrderDetails[];
   totalAmount: number;
 }
+
+export interface CreateIOrder {
+  Date: Date;
+  CustomerName: string;
+  Address: string;
+  PhoneNo: string;
+  Agent: string;
+  Transport: string;
+  PaymentTerms: string;
+  Remark: string;
+  OrderDetails: IOrderDetails[];
+  totalAmount: number;
+}
