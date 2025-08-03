@@ -1,10 +1,25 @@
 import axios from "axios";
 
-// Use proxy during development to avoid CORS issues
-const API_BASE_URL = import.meta.env.DEV
-  ? "/api"
-  : "https://pratishtha-bridal-backend.vercel.app/api";
-// const API_BASE_URL = "http://localhost:3000/api";
+// API Base URL configuration for different environments
+const getApiBaseUrl = () => {
+  // Check for environment variable first
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // Development: use proxy
+  if (import.meta.env.DEV) {
+    return "/api";
+  }
+
+  // Production: use CORS proxy temporarily
+  return "https://cors-anywhere.herokuapp.com/https://pratishtha-bridal-backend.vercel.app/api";
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+console.log("API Base URL:", API_BASE_URL);
+console.log("Environment:", import.meta.env.MODE);
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -13,15 +28,10 @@ const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-  // Add these for better CORS handling
   timeout: 15000,
-  // Remove withCredentials to avoid CORS preflight issues
-  // withCredentials: true, // Enable cookies to be sent with requests
 });
 
-// COMMENTED OUT: Request interceptor for testing
-
-//  Request interceptor
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     // Add any authentication headers here if needed
@@ -29,30 +39,49 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Log request for debugging
+    console.log(
+      `Making ${config.method?.toUpperCase()} request to:`,
+      config.url
+    );
+
     return config;
   },
   (error) => {
     console.error("Request Error:", error);
-    // Don't let request errors crash the app
     return Promise.reject(error);
   }
 );
 
-// COMMENTED OUT: Response interceptor for testing
-
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
+    console.log(
+      `✅ ${response.config.method?.toUpperCase()} ${
+        response.config.url
+      } - Success`
+    );
     return response;
   },
   async (error) => {
-    console.error("API Error Details:", {
+    console.error("❌ API Error:", {
       message: error.message,
       status: error.response?.status,
       statusText: error.response?.statusText,
+      url: error.config?.url,
+      method: error.config?.method,
       data: error.response?.data,
-      config: error.config,
     });
+
+    // Handle CORS errors specifically
+    if (error.message === "Network Error" || error.code === "ERR_NETWORK") {
+      const corsError = new Error(
+        "CORS Error - Unable to connect to the server. Please check your internet connection or try again later."
+      );
+      corsError.name = "CORSError";
+      return Promise.reject(corsError);
+    }
 
     // Handle authentication errors
     if (error.response?.status === 401) {
@@ -60,7 +89,6 @@ api.interceptors.response.use(
       localStorage.removeItem("username");
       console.log("Authentication failed, cleared auth token");
 
-      // Only redirect to login if not already on login page and not on signup/forgot password pages
       const currentPath = window.location.pathname;
       const publicPages = ["/login", "/signup", "/forgot-password"];
       if (!publicPages.includes(currentPath)) {
@@ -72,7 +100,6 @@ api.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       const { status, data } = error.response;
-
       const errorMessage = data?.message || `Server Error (${status})`;
       const customError = new Error(errorMessage);
       customError.name = "APIError";

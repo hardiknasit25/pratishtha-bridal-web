@@ -16,6 +16,7 @@ import { SignupPage } from "./pages/SignupPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ToastContainer } from "./components/Toast";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import ApiDebugger from "./components/ApiDebugger";
 
 function App() {
   return (
@@ -58,6 +59,9 @@ function App() {
           />
           <Route path="/orders/add" element={<OrderFormPage />} />
           <Route path="/orders/edit/:orderId" element={<OrderFormPage />} />
+
+          {/* API Debug Route - Remove after testing */}
+          <Route path="/debug" element={<ApiDebugger />} />
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/products" replace />} />
