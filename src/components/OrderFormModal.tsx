@@ -93,14 +93,14 @@ export const OrderFormModal = ({
                 Order Number *
               </label>
               <input
-                {...register("orderNo")}
+                {...register("OrderNo")}
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 placeholder="e.g., ORD001"
               />
-              {errors.orderNo && (
+              {errors.OrderNo && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.orderNo.message}
+                  {errors.OrderNo.message}
                 </p>
               )}
             </div>
@@ -111,14 +111,14 @@ export const OrderFormModal = ({
                 Customer Name *
               </label>
               <input
-                {...register("customerName")}
+                {...register("CustomerName")}
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 placeholder="Enter customer name"
               />
-              {errors.customerName && (
+              {errors.CustomerName && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.customerName.message}
+                  {errors.CustomerName.message}
                 </p>
               )}
             </div>
@@ -129,32 +129,14 @@ export const OrderFormModal = ({
                 Phone Number *
               </label>
               <input
-                {...register("customerPhone")}
+                {...register("PhoneNo")}
                 type="tel"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 placeholder="Enter phone number"
               />
-              {errors.customerPhone && (
+              {errors.PhoneNo && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.customerPhone.message}
-                </p>
-              )}
-            </div>
-
-            {/* Customer Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <input
-                {...register("customerEmail")}
-                type="email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                placeholder="Enter email address"
-              />
-              {errors.customerEmail && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.customerEmail.message}
+                  {errors.PhoneNo.message}
                 </p>
               )}
             </div>
@@ -165,13 +147,13 @@ export const OrderFormModal = ({
                 Order Date *
               </label>
               <input
-                {...register("date")}
+                {...register("Date")}
                 type="date"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
               />
-              {errors.date && (
+              {errors.Date && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.date.message}
+                  {errors.Date.message}
                 </p>
               )}
             </div>
@@ -182,16 +164,16 @@ export const OrderFormModal = ({
                 Total Amount (₹) *
               </label>
               <input
-                {...register("total", { valueAsNumber: true })}
+                {...register("totalAmount", { valueAsNumber: true })}
                 type="number"
                 step="0.01"
                 min="0"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 placeholder="0.00"
               />
-              {errors.total && (
+              {errors.totalAmount && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.total.message}
+                  {errors.totalAmount.message}
                 </p>
               )}
             </div>
@@ -202,14 +184,14 @@ export const OrderFormModal = ({
                 Agent *
               </label>
               <input
-                {...register("agent")}
+                {...register("Agent")}
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 placeholder="Enter agent name"
               />
-              {errors.agent && (
+              {errors.Agent && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.agent.message}
+                  {errors.Agent.message}
                 </p>
               )}
             </div>
@@ -220,7 +202,7 @@ export const OrderFormModal = ({
                 Transport *
               </label>
               <select
-                {...register("transport")}
+                {...register("Transport")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
               >
                 <option value="">Select transport</option>
@@ -230,9 +212,9 @@ export const OrderFormModal = ({
                 <option value="Pickup">Pickup</option>
                 <option value="Local Delivery">Local Delivery</option>
               </select>
-              {errors.transport && (
+              {errors.Transport && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.transport.message}
+                  {errors.Transport.message}
                 </p>
               )}
             </div>
@@ -243,7 +225,7 @@ export const OrderFormModal = ({
                 Payment Terms *
               </label>
               <select
-                {...register("paymentTerms")}
+                {...register("PaymentTerms")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
               >
                 <option value="">Select payment terms</option>
@@ -253,52 +235,47 @@ export const OrderFormModal = ({
                 <option value="25% Advance">25% Advance</option>
                 <option value="Cash on Delivery">Cash on Delivery</option>
               </select>
-              {errors.paymentTerms && (
+              {errors.PaymentTerms && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.paymentTerms.message}
+                  {errors.PaymentTerms.message}
                 </p>
               )}
             </div>
 
-            {/* Delivery Date */}
+            {/* Address */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Delivery Date
-              </label>
-              <input
-                {...register("deliveryDate")}
-                type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-              />
-            </div>
-
-            {/* Status */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                {...register("status")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-              >
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
+                Address *
               </label>
               <textarea
-                {...register("notes")}
+                {...register("Address")}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                placeholder="Enter customer address"
+              />
+              {errors.Address && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.Address.message}
+                </p>
+              )}
+            </div>
+
+            {/* Remark */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Remark
+              </label>
+              <textarea
+                {...register("Remark")}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 placeholder="Additional notes..."
               />
+              {errors.Remark && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.Remark.message}
+                </p>
+              )}
             </div>
 
             {/* Form Actions */}

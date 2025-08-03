@@ -27,15 +27,13 @@ export const ProductFormModal = ({
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      designNo: "",
-      typeOfGarment: "",
-      rate: 0,
-      description: "",
-      category: "",
-      size: "",
-      color: "",
-      material: "",
-      inStock: true,
+      DesignNo: "",
+      TypeOfGarment: "",
+      ColorOfGarment: "",
+      BlouseColor: "",
+      DupptaColor: "",
+      Rate: 0,
+      FixCode: "",
     },
   });
 
@@ -87,14 +85,14 @@ export const ProductFormModal = ({
                 Design Number *
               </label>
               <input
-                {...register("designNo")}
+                {...register("DesignNo")}
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="e.g., DES001"
               />
-              {errors.designNo && (
+              {errors.DesignNo && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.designNo.message}
+                  {errors.DesignNo.message}
                 </p>
               )}
             </div>
@@ -105,21 +103,76 @@ export const ProductFormModal = ({
                 Type of Garment *
               </label>
               <select
-                {...register("typeOfGarment")}
+                {...register("TypeOfGarment")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select garment type</option>
-                <option value="Lehenga">Lehenga</option>
+                <option value="Bridal Lehenga">Bridal Lehenga</option>
+                <option value="Party Wear">Party Wear</option>
+                <option value="Anarkali Suit">Anarkali Suit</option>
                 <option value="Saree">Saree</option>
-                <option value="Anarkali">Anarkali</option>
                 <option value="Gown">Gown</option>
-                <option value="Fabric">Fabric</option>
-                <option value="Blouse">Blouse</option>
-                <option value="Dress">Dress</option>
+                <option value="Indo-Western">Indo-Western</option>
+                <option value="Sharara Suit">Sharara Suit</option>
+                <option value="Palazzo Suit">Palazzo Suit</option>
               </select>
-              {errors.typeOfGarment && (
+              {errors.TypeOfGarment && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.typeOfGarment.message}
+                  {errors.TypeOfGarment.message}
+                </p>
+              )}
+            </div>
+
+            {/* Color of Garment */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Color of Garment *
+              </label>
+              <input
+                {...register("ColorOfGarment")}
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., Red, Blue, Green"
+              />
+              {errors.ColorOfGarment && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.ColorOfGarment.message}
+                </p>
+              )}
+            </div>
+
+            {/* Blouse Color */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Blouse Color *
+              </label>
+              <input
+                {...register("BlouseColor")}
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., Gold, Silver, White"
+              />
+              {errors.BlouseColor && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.BlouseColor.message}
+                </p>
+              )}
+            </div>
+
+            {/* Dupatta Color */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Dupatta Color *
+              </label>
+              <input
+                {...register("DupptaColor")}
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., Red, Blue, Green"
+              />
+              {errors.DupptaColor && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.DupptaColor.message}
                 </p>
               )}
             </div>
@@ -130,106 +183,36 @@ export const ProductFormModal = ({
                 Rate (₹) *
               </label>
               <input
-                {...register("rate", { valueAsNumber: true })}
+                {...register("Rate", { valueAsNumber: true })}
                 type="number"
                 step="0.01"
                 min="0"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="0.00"
               />
-              {errors.rate && (
+              {errors.Rate && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.rate.message}
+                  {errors.Rate.message}
                 </p>
               )}
             </div>
 
-            {/* Category */}
+            {/* Fix Code */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
+                Fix Code
               </label>
               <input
-                {...register("category")}
+                {...register("FixCode")}
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., Bridal, Party, Casual"
+                placeholder="e.g., 1001"
               />
-            </div>
-
-            {/* Size */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Size
-              </label>
-              <select
-                {...register("size")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select size</option>
-                <option value="XS">XS</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-                <option value="Free Size">Free Size</option>
-              </select>
-            </div>
-
-            {/* Color */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Color
-              </label>
-              <input
-                {...register("color")}
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., Red, Gold, Silver"
-              />
-            </div>
-
-            {/* Material */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Material
-              </label>
-              <input
-                {...register("material")}
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., Silk, Cotton, Georgette"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                {...register("description")}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Product description..."
-              />
-            </div>
-
-            {/* In Stock */}
-            <div className="flex items-center">
-              <input
-                {...register("inStock")}
-                type="checkbox"
-                id="inStock"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="inStock"
-                className="ml-2 block text-sm text-gray-700"
-              >
-                In Stock
-              </label>
+              {errors.FixCode && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.FixCode.message}
+                </p>
+              )}
             </div>
 
             {/* Form Actions */}
