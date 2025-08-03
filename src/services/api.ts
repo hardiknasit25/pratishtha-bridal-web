@@ -2,14 +2,13 @@ import axios from "axios";
 
 const API_BASE_URL = "https://pratishtha-bridal-backend.vercel.app/api";
 
-// Create axios instance with base configuration
+// Create Axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 5000,
   headers: {
     "Content-Type": "application/json",
-    Accept: "application/json",
   },
-  timeout: 15000,
 });
 
 // Request interceptor
@@ -18,7 +17,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -26,11 +24,6 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log(
-      `✅ ${response.config.method?.toUpperCase()} ${
-        response.config.url
-      } - Success`
-    );
     return response;
   },
   async (error) => {
