@@ -5,6 +5,7 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { showToast } from "../components/Toast";
+import { authService } from "../services/authService";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export const LoginPage = () => {
     username: "",
     password: "",
   });
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -43,23 +45,21 @@ export const LoginPage = () => {
       setLoading(true);
       setError("");
 
-      // Simple authentication logic
-      if (formData.username === "admin" && formData.password === "password") {
-        // Show success message
-        showToast.success(
-          "Login Successful",
-          `Welcome back, ${formData.username}!`
-        );
+      // Use auth service to login
+      const user = await authService.login({
+        UserName: formData.username,
+        Password: formData.password,
+        rememberMe: rememberMe,
+      });
 
-        // Redirect to products page
-        navigate("/products");
-      } else {
-        setError("Invalid username or password");
-        showToast.error("Login Failed", "Invalid username or password");
-      }
-    } catch (err) {
+      // Show success message
+      showToast.success("Login Successful", `Welcome back, ${user.UserName}!`);
+
+      // Redirect to products page
+      navigate("/products");
+    } catch (err: any) {
       console.error("Login error:", err);
-      const errorMessage = "Login failed. Please try again.";
+      const errorMessage = err.message || "Login failed. Please try again.";
       setError(errorMessage);
       showToast.error("Login Failed", errorMessage);
     } finally {
@@ -133,6 +133,24 @@ export const LoginPage = () => {
               </div>
             </div>
 
+            {/* Remember Me Checkbox */}
+            <div className="flex items-center">
+              <input
+                id="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded"
+                disabled={loading}
+              />
+              <Label
+                htmlFor="rememberMe"
+                className="ml-2 block text-sm text-gray-700"
+              >
+                Remember me
+              </Label>
+            </div>
+
             {/* Error Message */}
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -156,19 +174,6 @@ export const LoginPage = () => {
               )}
             </Button>
           </form>
-
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-800 font-medium mb-2">
-              Demo Credentials:
-            </p>
-            <p className="text-xs text-gray-600">
-              Username: <span className="font-mono">admin</span>
-            </p>
-            <p className="text-xs text-gray-600">
-              Password: <span className="font-mono">password</span>
-            </p>
-          </div>
 
           {/* Links */}
           <div className="mt-6 space-y-3 text-center">

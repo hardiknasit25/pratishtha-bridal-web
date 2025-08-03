@@ -5,6 +5,7 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, Loader2, CheckCircle, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { showToast } from "../components/Toast";
+import { authService } from "../services/authService";
 
 export const ForgotPasswordPage = () => {
   const navigate = useNavigate();
@@ -53,22 +54,22 @@ export const ForgotPasswordPage = () => {
       setLoading(true);
       setError("");
 
-      // Simple verification logic
-      if (formData.username === "admin") {
-        // Show success message and move to reset step
-        showToast.success(
-          "Username Verified",
-          "Username found. Please enter your new password."
-        );
+      // Use auth service to verify username
+      await authService.forgotPassword({
+        UserName: formData.username,
+      });
 
-        setStep("reset");
-      } else {
-        setError("Username not found. Please check and try again.");
-        showToast.error("Verification Failed", "Username not found.");
-      }
-    } catch (err) {
+      // Show success message and move to reset step
+      showToast.success(
+        "Username Verified",
+        "Username found. Please enter your new password."
+      );
+
+      setStep("reset");
+    } catch (err: any) {
       console.error("Forgot password error:", err);
-      const errorMessage = "Username verification failed. Please try again.";
+      const errorMessage =
+        err.message || "Username verification failed. Please try again.";
       setError(errorMessage);
       showToast.error("Verification Failed", errorMessage);
     } finally {
@@ -85,7 +86,13 @@ export const ForgotPasswordPage = () => {
       setLoading(true);
       setError("");
 
-      // Simple reset logic
+      // Use auth service to reset password
+      await authService.resetPassword({
+        UserName: formData.username,
+        Password: formData.password,
+      });
+
+      // Show success message
       showToast.success(
         "Password Reset Successful",
         "Your password has been updated successfully."
@@ -97,9 +104,10 @@ export const ForgotPasswordPage = () => {
       setTimeout(() => {
         navigate("/login");
       }, 2000);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Reset password error:", err);
-      const errorMessage = "Password reset failed. Please try again.";
+      const errorMessage =
+        err.message || "Password reset failed. Please try again.";
       setError(errorMessage);
       showToast.error("Reset Failed", errorMessage);
     } finally {

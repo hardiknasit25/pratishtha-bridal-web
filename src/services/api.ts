@@ -1,11 +1,13 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://pratishtha-bridal-backend.vercel.app/api";
+// const API_BASE_URL = "https://pratishtha-bridal-backend.vercel.app/api";
+const API_BASE_URL = "https://pratishtha-backend.vercel.app/api";
+// const API_BASE_URL = "http://localhost:3000/api";
 
 // Create Axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 5000,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -14,9 +16,22 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Add any authentication headers here if needed
+    const token = localStorage.getItem("authToken");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Log request for debugging
+    console.log(
+      `Making ${config.method?.toUpperCase()} request to:`,
+      config.url
+    );
+
     return config;
   },
   (error) => {
+    console.error("Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -24,6 +39,11 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
+    console.log(
+      `✅ ${response.config.method?.toUpperCase()} ${
+        response.config.url
+      } - Success`
+    );
     return response;
   },
   async (error) => {

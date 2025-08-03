@@ -1,6 +1,6 @@
 import { cookieService } from "./cookieService";
-// import api from "./api";
-// import { API_ENDPOINTS } from "./apiEndpoints";
+import api from "./api";
+import { API_ENDPOINTS } from "./apiEndpoints";
 
 export interface LoginCredentials {
   UserName: string;
@@ -36,47 +36,21 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<User> {
     try {
-      // TEMPORARY: Hardcoded credentials for testing
-      if (
-        credentials.UserName === "admin" &&
-        credentials.Password === "password"
-      ) {
-        const mockUser: User = {
-          id: "1",
-          UserName: "admin",
-          name: "Administrator",
-          role: "admin",
-        };
+      console.log("Attempting login for:", credentials.UserName);
 
-        const mockToken = "mock-jwt-token-for-testing";
-
-        // Store auth token in cookie
-        cookieService.setAuthToken(mockToken, credentials.rememberMe || false);
-
-        // Also store user info in localStorage for quick access
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("username", mockUser.UserName);
-
-        return mockUser;
-      } else {
-        throw new Error(
-          "Invalid credentials. Use username: admin, password: password"
-        );
-      }
-
-      // COMMENTED OUT: Original API call
-      /*
       const response = await api.post(API_ENDPOINTS.LOGIN, {
         UserName: credentials.UserName,
         Password: credentials.Password,
       });
-      
+
       const { token, user } = response.data;
 
       // Ensure token exists in response
       if (!token) {
         throw new Error("No authentication token received from server");
       }
+
+      console.log("Login successful, token received");
 
       // Store auth token in cookie
       cookieService.setAuthToken(token, credentials.rememberMe || false);
@@ -86,10 +60,21 @@ class AuthService {
       localStorage.setItem("username", user.UserName);
 
       return user;
-      */
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
-      throw error;
+
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        throw new Error("Invalid username or password");
+      } else if (error.response?.status === 404) {
+        throw new Error("User not found");
+      } else if (error.message === "Network Error") {
+        throw new Error("Network error. Please check your connection.");
+      } else {
+        throw new Error(
+          error.response?.data?.message || "Login failed. Please try again."
+        );
+      }
     }
   }
 
@@ -98,39 +83,22 @@ class AuthService {
    */
   async signup(credentials: SignupCredentials): Promise<User> {
     try {
-      // TEMPORARY: Mock signup for testing
-      const mockUser: User = {
-        id: "1",
-        UserName: credentials.UserName,
-        name: credentials.UserName,
-        role: "user",
-      };
+      console.log("Attempting signup for:", credentials.UserName);
 
-      const mockToken = "mock-jwt-token-for-testing";
-
-      // Store auth token in cookie
-      cookieService.setAuthToken(mockToken, false);
-
-      // Also store user info in localStorage for quick access
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("username", mockUser.UserName);
-
-      return mockUser;
-
-      // COMMENTED OUT: Original API call
-      /*
       const response = await api.post(API_ENDPOINTS.SIGNUP, {
         UserName: credentials.UserName,
         Password: credentials.Password,
         confirmPassword: credentials.confirmPassword,
       });
-      
+
       const { token, user } = response.data;
 
       // Ensure token exists in response
       if (!token) {
         throw new Error("No authentication token received from server");
       }
+
+      console.log("Signup successful, token received");
 
       // Store auth token in cookie
       cookieService.setAuthToken(token, false);
@@ -140,10 +108,21 @@ class AuthService {
       localStorage.setItem("username", user.UserName);
 
       return user;
-      */
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup failed:", error);
-      throw error;
+
+      // Handle specific error cases
+      if (error.response?.status === 409) {
+        throw new Error("Username already exists");
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response?.data?.message || "Invalid signup data");
+      } else if (error.message === "Network Error") {
+        throw new Error("Network error. Please check your connection.");
+      } else {
+        throw new Error(
+          error.response?.data?.message || "Signup failed. Please try again."
+        );
+      }
     }
   }
 
@@ -152,19 +131,27 @@ class AuthService {
    */
   async forgotPassword(credentials: ForgotPasswordCredentials): Promise<void> {
     try {
-      // TEMPORARY: Mock forgot password for testing
-      console.log("Mock forgot password for:", credentials.UserName);
-      return;
+      console.log("Attempting forgot password for:", credentials.UserName);
 
-      // COMMENTED OUT: Original API call
-      /*
       await api.post(API_ENDPOINTS.FORGOT_PASSWORD, {
         UserName: credentials.UserName,
       });
-      */
-    } catch (error) {
+
+      console.log("Forgot password request successful");
+    } catch (error: any) {
       console.error("Forgot password failed:", error);
-      throw error;
+
+      // Handle specific error cases
+      if (error.response?.status === 404) {
+        throw new Error("Username not found");
+      } else if (error.message === "Network Error") {
+        throw new Error("Network error. Please check your connection.");
+      } else {
+        throw new Error(
+          error.response?.data?.message ||
+            "Forgot password request failed. Please try again."
+        );
+      }
     }
   }
 
@@ -173,20 +160,32 @@ class AuthService {
    */
   async resetPassword(credentials: ResetPasswordCredentials): Promise<void> {
     try {
-      // TEMPORARY: Mock reset password for testing
-      console.log("Mock reset password for:", credentials.UserName);
-      return;
+      console.log("Attempting password reset for:", credentials.UserName);
 
-      // COMMENTED OUT: Original API call
-      /*
       await api.put(API_ENDPOINTS.RESET_PASSWORD, {
         UserName: credentials.UserName,
         Password: credentials.Password,
       });
-      */
-    } catch (error) {
+
+      console.log("Password reset successful");
+    } catch (error: any) {
       console.error("Password reset failed:", error);
-      throw error;
+
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        throw new Error(
+          error.response?.data?.message || "Invalid password data"
+        );
+      } else if (error.response?.status === 404) {
+        throw new Error("User not found");
+      } else if (error.message === "Network Error") {
+        throw new Error("Network error. Please check your connection.");
+      } else {
+        throw new Error(
+          error.response?.data?.message ||
+            "Password reset failed. Please try again."
+        );
+      }
     }
   }
 
@@ -195,21 +194,21 @@ class AuthService {
    */
   async logout(): Promise<void> {
     try {
-      // TEMPORARY: Mock logout for testing
-      console.log("Mock logout");
+      console.log("Attempting logout");
 
-      // COMMENTED OUT: Original API call
-      /*
       // Call logout endpoint if available
       await api.post(API_ENDPOINTS.LOGOUT);
-      */
+
+      console.log("Logout API call successful");
     } catch (error) {
       console.error("Logout API call failed:", error);
+      // Don't throw error here as we still want to clear local data
     } finally {
       // Always clear local auth token and localStorage
       cookieService.removeAuthToken();
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("username");
+      console.log("Local authentication data cleared");
     }
   }
 
@@ -245,24 +244,18 @@ class AuthService {
     }
 
     try {
-      // TEMPORARY: Mock user for testing
-      const mockUser: User = {
-        id: "1",
-        UserName: "admin",
-        name: "Administrator",
-        role: "admin",
-      };
-      return mockUser;
+      console.log("Fetching current user info");
 
-      // COMMENTED OUT: Original API call
-      /*
       const response = await api.get(API_ENDPOINTS.GET_USER_PROFILE);
       return response.data;
-      */
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to get current user:", error);
+
       // If getting user info fails, clear auth token
-      this.logout();
+      if (error.response?.status === 401) {
+        console.log("Token expired, clearing authentication");
+        this.logout();
+      }
       return null;
     }
   }
@@ -272,24 +265,24 @@ class AuthService {
    */
   async refreshToken(): Promise<string | null> {
     try {
-      // TEMPORARY: Mock token refresh for testing
-      const mockToken = "mock-jwt-token-for-testing";
-      cookieService.setAuthToken(mockToken);
-      return mockToken;
+      console.log("Attempting token refresh");
 
-      // COMMENTED OUT: Original API call
-      /*
       const response = await api.post(API_ENDPOINTS.REFRESH_TOKEN);
       const { token } = response.data;
 
       // Update stored token
       cookieService.setAuthToken(token);
 
+      console.log("Token refresh successful");
       return token;
-      */
-    } catch (error) {
+    } catch (error: any) {
       console.error("Token refresh failed:", error);
-      this.logout();
+
+      // If refresh fails, logout user
+      if (error.response?.status === 401) {
+        console.log("Token refresh failed, logging out user");
+        this.logout();
+      }
       return null;
     }
   }
@@ -311,11 +304,18 @@ class AuthService {
     }
 
     try {
-      const user = await this.getCurrentUser();
-      return user;
-    } catch (error) {
+      console.log("Validating token");
+
+      const response = await api.get(API_ENDPOINTS.VERIFY_TOKEN);
+      return response.data;
+    } catch (error: any) {
       console.error("Token validation failed:", error);
-      this.logout();
+
+      // If validation fails, logout user
+      if (error.response?.status === 401) {
+        console.log("Token validation failed, logging out user");
+        this.logout();
+      }
       return null;
     }
   }

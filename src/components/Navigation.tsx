@@ -1,8 +1,8 @@
-import { User, LogOut } from "lucide-react";
-import { Button } from "./ui/button";
+import { LogOut, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
+import { cookieService } from "../services/cookieService";
 import { showToast } from "./Toast";
+import { Button } from "./ui/button";
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -10,9 +10,9 @@ export const Navigation = () => {
 
   const handleLogout = async () => {
     try {
-      // Call the auth service logout
-      await authService.logout();
-
+      cookieService.removeAuthToken();
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("username");
       // Show success message
       showToast.success("Logged Out", "You have been successfully logged out.");
 

@@ -5,6 +5,7 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { showToast } from "../components/Toast";
+import { authService } from "../services/authService";
 
 export const SignupPage = () => {
   const navigate = useNavigate();
@@ -57,17 +58,25 @@ export const SignupPage = () => {
       setLoading(true);
       setError("");
 
-      // Simple signup logic - just redirect to products
+      // Use auth service to signup
+      const user = await authService.signup({
+        UserName: formData.username,
+        Password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
+
+      // Show success message
       showToast.success(
         "Account Created",
-        `Welcome, ${formData.username}! Your account has been created successfully.`
+        `Welcome, ${user.UserName}! Your account has been created successfully.`
       );
 
       // Redirect to products page
       navigate("/products");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Signup error:", err);
-      const errorMessage = "Registration failed. Please try again.";
+      const errorMessage =
+        err.message || "Registration failed. Please try again.";
       setError(errorMessage);
       showToast.error("Registration Failed", errorMessage);
     } finally {
