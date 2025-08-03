@@ -5,19 +5,12 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { showToast } from "../components/Toast";
-// import { userLoginSchema } from "../schemas/validationSchemas";
-// import { useAuth } from "../contexts/AuthContext";
-
-// interface ValidationError {
-//   errors: Array<{ message: string }>;
-// }
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  // const { login } = useAuth();
   const [formData, setFormData] = useState({
-    UserName: "",
-    Password: "",
+    username: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,52 +22,44 @@ export const LoginPage = () => {
     if (error) setError(""); // Clear error when user starts typing
   };
 
+  const validateForm = () => {
+    if (!formData.username.trim()) {
+      setError("Username is required");
+      return false;
+    }
+    if (!formData.password.trim()) {
+      setError("Password is required");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!validateForm()) return;
+
     try {
-      // TEMPORARY: Skip validation and auth for testing
       setLoading(true);
       setError("");
 
-      // Show success message
-      showToast.success(
-        "Login Successful",
-        `Welcome back, ${formData.UserName}!`
-      );
+      // Simple authentication logic
+      if (formData.username === "admin" && formData.password === "password") {
+        // Show success message
+        showToast.success(
+          "Login Successful",
+          `Welcome back, ${formData.username}!`
+        );
 
-      // Redirect to products page
-      navigate("/products");
-
-      // COMMENTED OUT: Original authentication code
-      /*
-      // Validate form data
-      const validatedData = userLoginSchema.parse(formData);
-
-      // Call the auth context login
-      const user = await login(validatedData);
-
-      // Show success message
-      showToast.success("Login Successful", `Welcome back, ${user.UserName}!`);
-
-      // Redirect to products page
-      navigate("/products");
-      */
-    } catch (err: unknown) {
-      console.error("Login error:", err);
-
-      // Handle validation errors
-      if (err && typeof err === "object" && "errors" in err) {
-        const validationError =
-          (err as any).errors[0]?.message || "Validation failed";
-        setError(validationError);
-        showToast.error("Validation Error", validationError);
-        return;
+        // Redirect to products page
+        navigate("/products");
+      } else {
+        setError("Invalid username or password");
+        showToast.error("Login Failed", "Invalid username or password");
       }
-
-      // Handle API errors
-      const errorMessage =
-        err instanceof Error ? err.message : "Login failed. Please try again.";
+    } catch (err) {
+      console.error("Login error:", err);
+      const errorMessage = "Login failed. Please try again.";
       setError(errorMessage);
       showToast.error("Login Failed", errorMessage);
     } finally {
@@ -101,16 +86,16 @@ export const LoginPage = () => {
             {/* Username Field */}
             <div className="space-y-2">
               <Label
-                htmlFor="UserName"
+                htmlFor="username"
                 className="text-sm font-medium text-gray-700"
               >
                 Username
               </Label>
               <Input
-                id="UserName"
-                name="UserName"
+                id="username"
+                name="username"
                 type="text"
-                value={formData.UserName}
+                value={formData.username}
                 onChange={handleInputChange}
                 placeholder="Enter your username"
                 className="h-12 px-4 border-gray-300 focus:border-pink-500 focus:ring-pink-500"
@@ -121,17 +106,17 @@ export const LoginPage = () => {
             {/* Password Field */}
             <div className="space-y-2">
               <Label
-                htmlFor="Password"
+                htmlFor="password"
                 className="text-sm font-medium text-gray-700"
               >
                 Password
               </Label>
               <div className="relative">
                 <Input
-                  id="Password"
-                  name="Password"
+                  id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
-                  value={formData.Password}
+                  value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Enter your password"
                   className="h-12 px-4 pr-12 border-gray-300 focus:border-pink-500 focus:ring-pink-500"
@@ -171,6 +156,19 @@ export const LoginPage = () => {
               )}
             </Button>
           </form>
+
+          {/* Demo Credentials */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-sm text-gray-800 font-medium mb-2">
+              Demo Credentials:
+            </p>
+            <p className="text-xs text-gray-600">
+              Username: <span className="font-mono">admin</span>
+            </p>
+            <p className="text-xs text-gray-600">
+              Password: <span className="font-mono">password</span>
+            </p>
+          </div>
 
           {/* Links */}
           <div className="mt-6 space-y-3 text-center">

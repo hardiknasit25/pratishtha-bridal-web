@@ -5,19 +5,12 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { showToast } from "../components/Toast";
-// import { userSignupSchema } from "../schemas/validationSchemas";
-// import { useAuth } from "../contexts/AuthContext";
-
-// interface ValidationError {
-//   errors: Array<{ message: string }>;
-// }
 
 export const SignupPage = () => {
   const navigate = useNavigate();
-  // const { signup } = useAuth();
   const [formData, setFormData] = useState({
-    UserName: "",
-    Password: "",
+    username: "",
+    password: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -31,57 +24,50 @@ export const SignupPage = () => {
     if (error) setError(""); // Clear error when user starts typing
   };
 
+  const validateForm = () => {
+    if (!formData.username.trim()) {
+      setError("Username is required");
+      return false;
+    }
+    if (formData.username.length < 3) {
+      setError("Username must be at least 3 characters long");
+      return false;
+    }
+    if (!formData.password.trim()) {
+      setError("Password is required");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!validateForm()) return;
+
     try {
-      // TEMPORARY: Skip validation and auth for testing
       setLoading(true);
       setError("");
 
-      // Show success message
+      // Simple signup logic - just redirect to products
       showToast.success(
         "Account Created",
-        `Welcome, ${formData.UserName}! Your account has been created successfully.`
+        `Welcome, ${formData.username}! Your account has been created successfully.`
       );
 
       // Redirect to products page
       navigate("/products");
-
-      // COMMENTED OUT: Original authentication code
-      /*
-      // Validate form data
-      const validatedData = userSignupSchema.parse(formData);
-
-      // Call the auth context signup
-      const user = await signup(validatedData);
-
-      // Show success message
-      showToast.success(
-        "Account Created",
-        `Welcome, ${user.UserName}! Your account has been created successfully.`
-      );
-
-      // Redirect to products page
-      navigate("/products");
-      */
-    } catch (err: unknown) {
+    } catch (err) {
       console.error("Signup error:", err);
-
-      // Handle validation errors
-      if (err && typeof err === "object" && "errors" in err) {
-        const validationError =
-          (err as any).errors[0]?.message || "Validation failed";
-        setError(validationError);
-        showToast.error("Validation Error", validationError);
-        return;
-      }
-
-      // Handle API errors
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Registration failed. Please try again.";
+      const errorMessage = "Registration failed. Please try again.";
       setError(errorMessage);
       showToast.error("Registration Failed", errorMessage);
     } finally {
@@ -106,16 +92,16 @@ export const SignupPage = () => {
             {/* Username Field */}
             <div className="space-y-2">
               <Label
-                htmlFor="UserName"
+                htmlFor="username"
                 className="text-sm font-medium text-gray-700"
               >
                 Username
               </Label>
               <Input
-                id="UserName"
-                name="UserName"
+                id="username"
+                name="username"
                 type="text"
-                value={formData.UserName}
+                value={formData.username}
                 onChange={handleInputChange}
                 placeholder="Enter your username"
                 className="h-12 px-4 border-gray-300 focus:border-pink-500 focus:ring-pink-500"
@@ -126,17 +112,17 @@ export const SignupPage = () => {
             {/* Password Field */}
             <div className="space-y-2">
               <Label
-                htmlFor="Password"
+                htmlFor="password"
                 className="text-sm font-medium text-gray-700"
               >
                 Password
               </Label>
               <div className="relative">
                 <Input
-                  id="Password"
-                  name="Password"
+                  id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
-                  value={formData.Password}
+                  value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Enter your password"
                   className="h-12 px-4 pr-12 border-gray-300 focus:border-pink-500 focus:ring-pink-500"
@@ -225,22 +211,16 @@ export const SignupPage = () => {
           </div>
         </div>
 
-        {/* TEMPORARY: Removed password requirements for testing */}
-        {/* 
+        {/* Password Requirements */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <p className="text-sm text-gray-800 font-medium mb-2">
             Password Requirements:
           </p>
           <ul className="text-xs text-gray-600 space-y-1">
             <li>• At least 6 characters long</li>
-            <li>• Maximum 100 characters</li>
-            <li>• At least one lowercase letter</li>
-            <li>• At least one uppercase letter</li>
-            <li>• At least one number</li>
             <li>• Passwords must match</li>
           </ul>
         </div>
-        */}
       </div>
     </div>
   );

@@ -1,117 +1,42 @@
 import { z } from "zod";
 
-// TEMPORARY: Simplified validation for testing
-export const userSignupSchema = z
-  .object({
-    UserName: z.string().min(1, "Username is required"),
-    Password: z.string().min(1, "Password is required"),
-    confirmPassword: z.string().min(1, "Password confirmation is required"),
-  })
-  .refine((data) => data.Password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
-
-export const userLoginSchema = z.object({
-  UserName: z.string().min(1, "Username is required"),
-  Password: z.string().min(1, "Password is required"),
-});
-
-export const forgotPasswordSchema = z.object({
-  UserName: z.string().min(1, "Username is required"),
-});
-
-export const resetPasswordSchema = z.object({
-  UserName: z.string().min(1, "Username is required"),
-  Password: z.string().min(1, "Password is required"),
-});
-
-// ORIGINAL STRICT VALIDATION (COMMENTED OUT FOR TESTING)
-/*
-export const userSignupSchema = z.object({
-  UserName: z
-    .string()
-    .min(3, "Username must be at least 3 characters long")
-    .max(50, "Username cannot exceed 50 characters"),
-  Password: z
-    .string()
-    .min(6, "Password must be at least 6 characters long")
-    .max(100, "Password cannot exceed 100 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
-    ),
-  confirmPassword: z.string(),
-}).refine((data) => data.Password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-export const userLoginSchema = z.object({
-  UserName: z.string().min(1, "Username is required"),
-  Password: z.string().min(1, "Password is required"),
-});
-
-export const forgotPasswordSchema = z.object({
-  UserName: z.string().min(1, "Username is required"),
-});
-
-export const resetPasswordSchema = z.object({
-  UserName: z.string().min(1, "Username is required"),
-  Password: z
-    .string()
-    .min(6, "Password must be at least 6 characters long")
-    .max(100, "Password cannot exceed 100 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
-    ),
-});
-*/
-
 // Product Schema
 export const productSchema = z.object({
-  designNo: z.string().min(1, "Design number is required"),
-  typeOfGarment: z.string().min(1, "Type of garment is required"),
-  rate: z.number().min(0, "Rate must be a positive number"),
-  inStock: z.boolean(),
-  description: z.string().optional(),
-  category: z.string().optional(),
-  size: z.string().optional(),
-  color: z.string().optional(),
-  material: z.string().optional(),
+  DesignNo: z.string().min(1, "Design number is required"),
+  TypeOfGarment: z.string().min(1, "Garment type is required"),
+  ColorOfGarment: z.string().min(1, "Garment color is required"),
+  BlouseColor: z.string().min(1, "Blouse color is required"),
+  DupptaColor: z.string().min(1, "Dupatta color is required"),
+  Rate: z.number().min(0, "Rate must be a positive number"),
+  FixCode: z.string().optional(),
 });
-
-export type ProductFormData = z.infer<typeof productSchema>;
-
-// Order Schema
-export const orderSchema = z.object({
-  orderNo: z.string().min(1, "Order number is required"),
-  customerName: z.string().min(1, "Customer name is required"),
-  customerPhone: z.string().min(10, "Valid phone number is required"),
-  customerEmail: z
-    .string()
-    .email("Valid email is required")
-    .optional()
-    .or(z.literal("")),
-  date: z.string().min(1, "Date is required"),
-  total: z.number().min(0, "Total must be a positive number"),
-  agent: z.string().min(1, "Agent is required"),
-  transport: z.string().min(1, "Transport is required"),
-  paymentTerms: z.string().min(1, "Payment terms are required"),
-  status: z.enum(["pending", "processing", "completed", "cancelled"]),
-  deliveryDate: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-export type OrderFormData = z.infer<typeof orderSchema>;
 
 // Order Detail Schema
 export const orderDetailSchema = z.object({
-  productId: z.string().min(1, "Product is required"),
-  quantity: z.number().min(1, "Quantity must be at least 1"),
-  rate: z.number().min(0, "Rate must be a positive number"),
-  amount: z.number().min(0, "Amount must be a positive number"),
+  DesignNo: z.string().min(1, "Design number is required"),
+  Quantity: z.number().min(1, "Quantity must be at least 1"),
+  UnitPrice: z.number().min(0, "Unit price must be a positive number"),
+  TotalPrice: z.number().min(0, "Total price must be a positive number"),
 });
 
+// Order Schema
+export const orderSchema = z.object({
+  OrderNo: z.string().min(1, "Order number is required"),
+  Date: z.date(),
+  CustomerName: z.string().min(1, "Customer name is required"),
+  PhoneNo: z.string().min(1, "Phone number is required"),
+  Address: z.string().min(1, "Address is required"),
+  Agent: z.string().min(1, "Agent is required"),
+  Transport: z.string().optional(),
+  PaymentTerms: z.string().optional(),
+  Remark: z.string().optional(),
+  OrderDetails: z
+    .array(orderDetailSchema)
+    .min(1, "At least one order detail is required"),
+  totalAmount: z.number().min(0, "Total amount must be a positive number"),
+});
+
+// Type exports
+export type ProductFormData = z.infer<typeof productSchema>;
 export type OrderDetailFormData = z.infer<typeof orderDetailSchema>;
+export type OrderFormData = z.infer<typeof orderSchema>;

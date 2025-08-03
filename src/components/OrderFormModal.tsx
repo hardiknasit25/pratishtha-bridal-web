@@ -24,18 +24,24 @@ export const OrderFormModal = ({
   } = useForm<OrderFormData>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      orderNo: "",
-      customerName: "",
-      customerPhone: "",
-      customerEmail: "",
-      date: new Date().toISOString().split("T")[0],
-      total: 0,
-      agent: "",
-      transport: "",
-      paymentTerms: "",
-      deliveryDate: "",
-      status: "pending",
-      notes: "",
+      OrderNo: "",
+      Date: new Date(),
+      CustomerName: "",
+      PhoneNo: "",
+      Address: "",
+      Agent: "",
+      Transport: "",
+      PaymentTerms: "",
+      Remark: "",
+      OrderDetails: [
+        {
+          DesignNo: "",
+          Quantity: 1,
+          UnitPrice: 0,
+          TotalPrice: 0,
+        },
+      ],
+      totalAmount: 0,
     },
   });
 

@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://pratishtha-bridal-backend.vercel.app/api";
+// Use proxy during development to avoid CORS issues
+const API_BASE_URL = import.meta.env.DEV
+  ? "/api"
+  : "https://pratishtha-bridal-backend.vercel.app/api";
 // const API_BASE_URL = "http://localhost:3000/api";
 
 // Create axios instance with base configuration
@@ -8,10 +11,12 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
+    Accept: "application/json",
   },
   // Add these for better CORS handling
   timeout: 15000,
-  withCredentials: true, // Enable cookies to be sent with requests
+  // Remove withCredentials to avoid CORS preflight issues
+  // withCredentials: true, // Enable cookies to be sent with requests
 });
 
 // COMMENTED OUT: Request interceptor for testing
@@ -19,11 +24,11 @@ const api = axios.create({
 //  Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add auth token to headers if available
-    // const token = cookieService.getAuthToken();
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    // Add any authentication headers here if needed
+    const token = localStorage.getItem("authToken");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -51,8 +56,6 @@ api.interceptors.response.use(
 
     // Handle authentication errors
     if (error.response?.status === 401) {
-      // Clear auth token on unauthorized
-      // cookieService.removeAuthToken();
       localStorage.removeItem("isLoggedIn");
       localStorage.removeItem("username");
       console.log("Authentication failed, cleared auth token");

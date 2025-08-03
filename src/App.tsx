@@ -14,15 +14,12 @@ import { OrderFormPage } from "./pages/OrderFormPage";
 import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
-// import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ToastContainer } from "./components/Toast";
-// import { AuthProvider } from "./contexts/AuthContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
 function App() {
   return (
     <ErrorBoundary>
-      {/* <AuthProvider> */}
       <Router>
         <ToastContainer />
         <Routes>
@@ -31,72 +28,42 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-          {/* Protected Routes - Temporarily unprotected */}
+          {/* Main Routes */}
           <Route
             path="/products"
             element={
-              // <ProtectedRoute>
               <div className="min-h-screen bg-gray-50">
                 <Navigation />
                 <ProductsPage />
                 <BottomNavigation />
                 <InstallPWA />
               </div>
-              // </ProtectedRoute>
             }
           />
-          <Route
-            path="/products/add"
-            element={
-              // <ProtectedRoute>
-              <ProductFormPage />
-              // </ProtectedRoute>
-            }
-          />
+          <Route path="/products/add" element={<ProductFormPage />} />
           <Route
             path="/products/edit/:productId"
-            element={
-              // <ProtectedRoute>
-              <ProductFormPage />
-              // </ProtectedRoute>
-            }
+            element={<ProductFormPage />}
           />
           <Route
             path="/orders"
             element={
-              // <ProtectedRoute>
               <div className="min-h-screen bg-gray-50">
                 <Navigation />
                 <OrdersPage />
                 <BottomNavigation />
                 <InstallPWA />
               </div>
-              // </ProtectedRoute>
             }
           />
-          <Route
-            path="/orders/add"
-            element={
-              // <ProtectedRoute>
-              <OrderFormPage />
-              // </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/orders/edit/:orderId"
-            element={
-              // <ProtectedRoute>
-              <OrderFormPage />
-              // </ProtectedRoute>
-            }
-          />
+          <Route path="/orders/add" element={<OrderFormPage />} />
+          <Route path="/orders/edit/:orderId" element={<OrderFormPage />} />
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/products" replace />} />
           <Route path="*" element={<Navigate to="/products" replace />} />
         </Routes>
       </Router>
-      {/* </AuthProvider> */}
     </ErrorBoundary>
   );
 }

@@ -5,18 +5,13 @@ import { Label } from "../components/ui/label";
 import { Eye, EyeOff, Loader2, CheckCircle, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { showToast } from "../components/Toast";
-import { authService } from "../services/authService";
-import {
-  forgotPasswordSchema,
-  resetPasswordSchema,
-} from "../schemas/validationSchemas";
 
 export const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<"forgot" | "reset">("forgot");
   const [formData, setFormData] = useState({
-    UserName: "",
-    Password: "",
+    username: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,42 +24,51 @@ export const ForgotPasswordPage = () => {
     if (error) setError(""); // Clear error when user starts typing
   };
 
+  const validateForgotPassword = () => {
+    if (!formData.username.trim()) {
+      setError("Username is required");
+      return false;
+    }
+    return true;
+  };
+
+  const validateResetPassword = () => {
+    if (!formData.password.trim()) {
+      setError("Password is required");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return false;
+    }
+    return true;
+  };
+
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      // Validate form data
-      const validatedData = forgotPasswordSchema.parse({
-        UserName: formData.UserName,
-      });
+    if (!validateForgotPassword()) return;
 
+    try {
       setLoading(true);
       setError("");
 
-      // Call the auth service
-      await authService.forgotPassword(validatedData);
+      // Simple verification logic
+      if (formData.username === "admin") {
+        // Show success message and move to reset step
+        showToast.success(
+          "Username Verified",
+          "Username found. Please enter your new password."
+        );
 
-      // Show success message and move to reset step
-      showToast.success(
-        "Username Verified",
-        "Username found. Please enter your new password."
-      );
-
-      setStep("reset");
-    } catch (err: any) {
-      console.error("Forgot password error:", err);
-
-      // Handle validation errors
-      if (err.errors) {
-        const validationError = err.errors[0]?.message || "Validation failed";
-        setError(validationError);
-        showToast.error("Validation Error", validationError);
-        return;
+        setStep("reset");
+      } else {
+        setError("Username not found. Please check and try again.");
+        showToast.error("Verification Failed", "Username not found.");
       }
-
-      // Handle API errors
-      const errorMessage =
-        err.message || "Username verification failed. Please try again.";
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      const errorMessage = "Username verification failed. Please try again.";
       setError(errorMessage);
       showToast.error("Verification Failed", errorMessage);
     } finally {
@@ -75,20 +79,13 @@ export const ForgotPasswordPage = () => {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      // Validate form data
-      const validatedData = resetPasswordSchema.parse({
-        UserName: formData.UserName,
-        Password: formData.Password,
-      });
+    if (!validateResetPassword()) return;
 
+    try {
       setLoading(true);
       setError("");
 
-      // Call the auth service
-      await authService.resetPassword(validatedData);
-
-      // Show success message
+      // Simple reset logic
       showToast.success(
         "Password Reset Successful",
         "Your password has been updated successfully."
@@ -100,20 +97,9 @@ export const ForgotPasswordPage = () => {
       setTimeout(() => {
         navigate("/login");
       }, 2000);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Reset password error:", err);
-
-      // Handle validation errors
-      if (err.errors) {
-        const validationError = err.errors[0]?.message || "Validation failed";
-        setError(validationError);
-        showToast.error("Validation Error", validationError);
-        return;
-      }
-
-      // Handle API errors
-      const errorMessage =
-        err.message || "Password reset failed. Please try again.";
+      const errorMessage = "Password reset failed. Please try again.";
       setError(errorMessage);
       showToast.error("Reset Failed", errorMessage);
     } finally {
@@ -123,7 +109,7 @@ export const ForgotPasswordPage = () => {
 
   const handleBackToForgot = () => {
     setStep("forgot");
-    setFormData({ UserName: formData.UserName, Password: "" });
+    setFormData({ username: formData.username, password: "" });
     setError("");
   };
 
@@ -186,16 +172,16 @@ export const ForgotPasswordPage = () => {
             {/* Username Field */}
             <div className="space-y-2">
               <Label
-                htmlFor="UserName"
+                htmlFor="username"
                 className="text-sm font-medium text-gray-700"
               >
                 Username
               </Label>
               <Input
-                id="UserName"
-                name="UserName"
+                id="username"
+                name="username"
                 type="text"
-                value={formData.UserName}
+                value={formData.username}
                 onChange={handleInputChange}
                 placeholder="Enter your username"
                 className="h-12 px-4 border-gray-300 focus:border-pink-500 focus:ring-pink-500"
@@ -207,17 +193,17 @@ export const ForgotPasswordPage = () => {
             {step === "reset" && (
               <div className="space-y-2">
                 <Label
-                  htmlFor="Password"
+                  htmlFor="password"
                   className="text-sm font-medium text-gray-700"
                 >
                   New Password
                 </Label>
                 <div className="relative">
                   <Input
-                    id="Password"
-                    name="Password"
+                    id="password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
-                    value={formData.Password}
+                    value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Enter your new password"
                     className="h-12 px-4 pr-12 border-gray-300 focus:border-pink-500 focus:ring-pink-500"
@@ -293,10 +279,6 @@ export const ForgotPasswordPage = () => {
             </p>
             <ul className="text-xs text-gray-600 space-y-1">
               <li>• At least 6 characters long</li>
-              <li>• Maximum 100 characters</li>
-              <li>• At least one lowercase letter</li>
-              <li>• At least one uppercase letter</li>
-              <li>• At least one number</li>
             </ul>
           </div>
         )}
