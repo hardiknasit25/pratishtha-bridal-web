@@ -1,25 +1,6 @@
 import axios from "axios";
 
-// API Base URL configuration for different environments
-const getApiBaseUrl = () => {
-  // Check for environment variable first
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-
-  // Development: use proxy
-  if (import.meta.env.DEV) {
-    return "/api";
-  }
-
-  // Production: use CORS proxy temporarily
-  return "https://cors-anywhere.herokuapp.com/https://pratishtha-bridal-backend.vercel.app/api";
-};
-
-const API_BASE_URL = getApiBaseUrl();
-
-console.log("API Base URL:", API_BASE_URL);
-console.log("Environment:", import.meta.env.MODE);
+const API_BASE_URL = "https://pratishtha-bridal-backend.vercel.app/api";
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -34,18 +15,6 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add any authentication headers here if needed
-    const token = localStorage.getItem("authToken");
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    // Log request for debugging
-    console.log(
-      `Making ${config.method?.toUpperCase()} request to:`,
-      config.url
-    );
-
     return config;
   },
   (error) => {
