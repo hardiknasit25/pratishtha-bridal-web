@@ -20,6 +20,7 @@ import { Loader2, ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import { showToast } from "../components/Toast";
 import type { IOrderDetails, ProductDetails, IOrder } from "../types";
 import { fetchProducts } from "../store/productSlice";
+import { downloadOrderPDF } from "../services/orderService";
 
 // Order schema with validation
 const orderSchema = z.object({
@@ -241,9 +242,32 @@ export const OrderFormPage = () => {
           Remark: data.Remark || "",
         };
 
-        await dispatch(createOrder(orderData)).unwrap();
+        const createdOrder = await dispatch(createOrder(orderData)).unwrap();
+        console.log("createdOrder", createdOrder);
 
-        showToast.success("Order Created");
+        showToast.success(
+          "Order Created",
+          "Order has been created successfully!"
+        );
+
+        // Automatically download PDF after successful order creation
+        try {
+          await downloadOrderPDF(
+            createdOrder.order._id,
+            createdOrder.order.OrderNo,
+            createdOrder.order.CustomerName
+          );
+          showToast.success(
+            "PDF Downloaded",
+            `PDF for order ${createdOrder.OrderNo} has been downloaded automatically.`
+          );
+        } catch (pdfError: any) {
+          console.error("Error downloading PDF:", pdfError);
+          showToast.error(
+            "PDF Download Failed",
+            "Order created successfully, but PDF download failed. You can download it later from the orders list."
+          );
+        }
       }
 
       // Navigate back to orders page

@@ -56,6 +56,7 @@ export const API_ENDPOINTS = {
   EXPORT_ORDERS_CSV: "/export/orders/csv",
   EXPORT_ORDERS_PDF: "/export/orders/pdf",
   EXPORT_INVOICE_PDF: "/export/invoice/:orderId/pdf",
+  GENERATE_ORDER_PDF: "/orders/:id/pdf",
 
   // Backup
   CREATE_BACKUP: "/backup/create",

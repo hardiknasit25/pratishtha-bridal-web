@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Edit, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Edit, Trash2, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ExpandableCardProps {
@@ -9,6 +9,7 @@ interface ExpandableCardProps {
   children?: React.ReactNode;
   onEdit?: () => void;
   onDelete?: () => void;
+  onDownloadPDF?: () => void;
 }
 
 export const ExpandableCard = ({
@@ -18,6 +19,7 @@ export const ExpandableCard = ({
   children,
   onEdit,
   onDelete,
+  onDownloadPDF,
 }: ExpandableCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -66,8 +68,20 @@ export const ExpandableCard = ({
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   {children}
 
-                  {(onEdit || onDelete) && (
+                  {(onEdit || onDelete || onDownloadPDF) && (
                     <div className="flex gap-2 mt-4">
+                      {onDownloadPDF && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDownloadPDF();
+                          }}
+                          className="flex items-center justify-center gap-2 px-3 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
+                        >
+                          <FileText className="w-4 h-4" />
+                          PDF
+                        </button>
+                      )}
                       {onEdit && (
                         <button
                           onClick={(e) => {

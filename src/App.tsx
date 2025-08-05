@@ -16,6 +16,7 @@ import { SignupPage } from "./pages/SignupPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ToastContainer } from "./components/Toast";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import PDFTest from "./components/PDFTest";
 
 function App() {
   return (
@@ -58,6 +59,9 @@ function App() {
           />
           <Route path="/orders/add" element={<OrderFormPage />} />
           <Route path="/orders/edit/:orderId" element={<OrderFormPage />} />
+
+          {/* PDF Test Route - Remove after testing */}
+          <Route path="/pdf-test" element={<PDFTest />} />
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/products" replace />} />

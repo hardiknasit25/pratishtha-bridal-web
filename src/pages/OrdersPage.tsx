@@ -15,6 +15,7 @@ import {
   fetchOrders,
   searchOrders,
 } from "../store/orderSlice";
+import { downloadOrderPDF } from "../services/orderService";
 
 export const OrdersPage = () => {
   const navigate = useNavigate();
@@ -108,6 +109,22 @@ export const OrdersPage = () => {
     navigate(`/orders/edit/${order._id}`);
   };
 
+  const handleDownloadPDF = async (order: IOrder) => {
+    try {
+      await downloadOrderPDF(order._id, order.OrderNo, order.CustomerName);
+      showToast.success(
+        "PDF Downloaded",
+        `PDF for order ${order.OrderNo} has been downloaded successfully.`
+      );
+    } catch (error: any) {
+      console.error("Error downloading PDF:", error);
+      showToast.error(
+        "Download Failed",
+        error.message || "Failed to download PDF. Please try again."
+      );
+    }
+  };
+
   const handleRefresh = () => {
     dispatch(fetchOrders());
   };
@@ -187,6 +204,7 @@ export const OrdersPage = () => {
               price={(order?.totalAmount || 0).toFixed(2)}
               onEdit={() => handleEditOrder(order)}
               onDelete={() => handleDelete(order)}
+              onDownloadPDF={() => handleDownloadPDF(order)}
             >
               <div className="space-y-2 text-sm">
                 <div className="grid grid-cols-2 gap-2">
